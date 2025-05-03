@@ -67,3 +67,98 @@ A **next-generation crypto wallet** that uses **passkeys** to create and manage 
 - **Optional: Decentralised storage, Centralised storage or LocalStorage** for pinning your users safely encrypted wallet data.
 
 
+
+# ✅ Portara Vault – Production Readiness Checklist
+
+---
+
+## 🔐 1. Security & Cryptography
+
+- [ ] **Use HTTPS in production**  
+  PRF and `navigator.credentials.get()` require a secure context (HTTPS or `localhost`).
+
+- [ ] **Lock down iframe origins**
+  - Replace `localhost:3000` with your actual domain in `trustedOrigin`.
+  - Use strict `targetOrigin` in all `postMessage()` calls.
+  - Set `Cross-Origin-Embedder-Policy` and `Cross-Origin-Opener-Policy` headers for vault iframe.
+
+- [ ] **Rotate nonces in CSP headers**
+  - Don't hardcode `'nonce-abc123'`; generate a secure nonce per request and inject it into inline script/style tags.
+
+- [ ] **Verify PRF/WebAuthn support**
+  - Detect if the user agent supports PRF.
+  - Show a fallback or error if unsupported.
+
+- [ ] **Encrypt secrets client-side only**
+  - You're using AES-GCM + PRF-derived keys — good.
+  - Ensure salt and IV are generated with `crypto.getRandomValues()` per wallet.
+
+---
+
+## 🧱 2. Code & Architecture
+
+- [ ] **Split app into logical modules**
+  - Keep iframe and main React module in different folders or repositories.
+  - Build iframe as a static file served on its own subdomain.
+
+- [ ] **Publish React component as an NPM package (optional)**
+  - Create a lightweight React component wrapper (`PortaraVault`) that developers can import.
+  - Bundle with Vite or Rollup for ESM + CJS support.
+
+- [ ] **Add subresource integrity (SRI) or signed vault hash (optional)**
+  - If hosting the iframe separately, verify its integrity to prevent tampering.
+
+- [ ] **Use secure storage (optional)**
+  - Store encrypted wallets in IndexedDB or `StorageManager.persist()`, not `localStorage`.
+
+---
+
+## 💡 3. UX & Interaction
+
+- [ ] **Show vault iframe loading state**
+  - Display “Vault loading…” UI until iframe posts `{ status: "ready" }`.
+
+- [ ] **Handle errors clearly**
+  - Timeout on iframe load
+  - Passkey canceled
+  - PRF failure
+  - Unrecognized commands
+
+- [ ] **Confirm signing success visually**
+  - Animate confirmation, copy signature to clipboard, etc.
+
+- [ ] **Add secure QR pairing for mobile (optional)**
+  - Allow mobile vault to be triggered via QR code + cross-device WebAuthn.
+
+---
+
+## 🚀 4. Hosting & Deployment
+
+- [ ] **Serve iframe and main app from separate subdomains**
+  - Example: `vault.example.com` for iframe, `app.example.com` for UI.
+  - Helps enforce isolation via CSP and sandbox.
+
+- [ ] **Use proper cache headers**
+  - Disable cache for vault iframe
+  - Enable long-lived cache for static React assets
+
+- [ ] **Log vault activity (non-sensitive)**
+  - Log command starts/errors — never log decrypted keys or sensitive data.
+
+- [ ] **Run a security header audit**
+  - Use: [https://securityheaders.com](https://securityheaders.com)
+  - Required headers:
+    - `Content-Security-Policy`
+    - `X-Content-Type-Options: nosniff`
+    - `X-Frame-Options: DENY`
+    - `Referrer-Policy: no-referrer`
+
+---
+
+## 🧪 5. Testing & Monitoring
+
+- [ ] **Unit test message handler logic**
+- [ ] **Test on all major browsers + devices**
+- [ ] **Log client errors + report to server (optional)**
+- [ ] **Add CI/CD to deploy iframe and UI separately**
+- [ ] **Monitor user-reported errors in passkey flows**
