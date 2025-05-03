@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Portara Vault</title>
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net 'nonce-abc123';
+    style-src 'self' 'unsafe-inline';
+    connect-src 'self';"
+  />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js" nonce="abc123"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.73.3/lib/index.iife.min.js" nonce="abc123"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tweetnacl@1.0.3/nacl.min.js" nonce="abc123"></script>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      padding: 2rem;
+      color: #111;
+      max-width: 600px;
+      margin: auto;
+    }
+    button {
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 6px;
+      background: #2d72d9;
+      color: white;
+      cursor: pointer;
+      margin-bottom: 1rem;
+    }
+    pre {
+      padding: 1rem;
+      border: 1px solid #ccc;
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+      height: 250px;
+      overflow-y: auto;
+      background: #f8f8f8;
+    }
+  </style>
+</head>
+<body>
+  <button id="createBtn">Create Wallet</button>
+  <pre id="log">[Vault Ready]</pre>
+
+  <script nonce="abc123">
+    window.onload = () => {
+      const log = (msg) => {
+        const box = document.getElementById("log");
+        box.textContent += "\n" + msg;
+        box.scrollTop = box.scrollHeight;
+        console.log("[Vault]", msg);
+      };
+
+      const trustedOrigin = "http://localhost:3000";
+
+      window.parent.postMessage({ status: "ready", source: "iframe" }, trustedOrigin);
+
+      async function deriveKey(salt) {
+        const result = await navigator.credentials.get({
+          publicKey: {
+            challenge: crypto.getRandomValues(new Uint8Array(32)),
+            userVerification: "required",
+            rpId: window.location.hostname,
+            timeout: 60000,
+            extensions: { prf: { eval: { first: salt } } },
+          },
+        });
+        const prf = result.getClientExtensionResults().prf;
+        const shared = prf?.results?.first;
+        if (!shared) throw new Error("PRF unavailable");
+        const hash = await crypto.subtle.digest("SHA-256", shared);
+        return crypto.subtle.importKey("raw", hash, "AES-GCM", false, ["encrypt", "decrypt"]);
+      }
+
+      async function encrypt(key, iv, data) {
+        const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, data);
+        return btoa(String.fromCharCode(...new Uint8Array(encrypted)));
+      }
+
+      async function createWallet() {
+        const ethSalt = crypto.getRandomValues(new Uint8Array(32));
+        const ethIv = crypto.getRandomValues(new Uint8Array(12));
+        const solSalt = crypto.getRandomValues(new Uint8Array(32));
+        const solIv = crypto.getRandomValues(new Uint8Array(12));
+
+        const ethKey = await deriveKey(ethSalt);
+        const solKey = await deriveKey(solSalt);
+
+        const ethWallet = ethers.Wallet.createRandom();
+        const solKeypair = solanaWeb3.Keypair.generate();
+
+        const ethEnc = await encrypt(ethKey, ethIv, new TextEncoder().encode(ethWallet.privateKey));
+        const solEnc = await encrypt(solKey, solIv, solKeypair.secretKey);
+
+        const data = {
+          eth: {
+            publicAddress: ethWallet.address,
+            cipherText: ethEnc,
+            iv: btoa(String.fromCharCode(...ethIv)),
+            salt: btoa(String.fromCharCode(...ethSalt)),
+          },
+          solana: {
+            publicAddress: solKeypair.publicKey.toBase58(),
+            cipherText: solEnc,
+            iv: btoa(String.fromCharCode(...solIv)),
+            salt: btoa(String.fromCharCode(...solSalt)),
+          },
+        };
+
+        window.parent.postMessage({ id: 0, command: "signup", result: data, source: "iframe" }, trustedOrigin);
+      }
+
+      async function signText({ chain, message, cipherText, iv, salt }) {
+        const decodedCipher = Uint8Array.from(atob(cipherText), (c) => c.charCodeAt(0));
+        const ivBytes = Uint8Array.from(atob(iv), (c) => c.charCodeAt(0));
+        const saltBytes = Uint8Array.from(atob(salt), (c) => c.charCodeAt(0));
+        const key = await deriveKey(saltBytes);
+        const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv: ivBytes }, key, decodedCipher);
+
+        if (chain === "eth") {
+          const privateKey = new TextDecoder().decode(decrypted);
+          const wallet = new ethers.Wallet(privateKey);
+          return { signature: await wallet.signMessage(message) };
+        }
+
+        if (chain === "solana") {
+          const secretKey = new Uint8Array(decrypted);
+          const msg = new TextEncoder().encode(message);
+          const signature = nacl.sign.detached(msg, secretKey);
+          return { signature: btoa(String.fromCharCode(...signature)) };
+        }
+
+        throw new Error("Unsupported chain: " + chain);
+      }
+
+      document.getElementById("createBtn").onclick = async () => {
+        try {
+          await createWallet();
+        } catch (err) {
+          window.parent.postMessage({ id: 0, command: "signup", error: err.message, source: "iframe" }, trustedOrigin);
+        }
+      };
+
+      window.addEventListener("message", async (event) => {
+        if (event.origin !== trustedOrigin || event.data?.source !== "parent") return;
+
+        const { id, command, data } = event.data;
+
+        try {
+          if (command === "signup") {
+            await createWallet();
+          } else if (command === "signText") {
+            const result = await signText(data);
+            window.parent.postMessage({ id, command, result, source: "iframe" }, trustedOrigin);
+          }
+        } catch (err) {
+          window.parent.postMessage({ id, command, error: err.message, source: "iframe" }, trustedOrigin);
+        }
+      });
+    };
+  </script>
+</body>
+</html>

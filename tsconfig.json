@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+      "target": "es2020",
+      "module": "esnext",
+      "jsx": "react-jsx",
+      "outDir": "dist",
+      "moduleResolution": "node",
+      "esModuleInterop": true,
+      "skipLibCheck": true,
+      "forceConsistentCasingInFileNames": true,
+      "strict": true,
+      "allowSyntheticDefaultImports": true
+    },
+    "include": ["src"]
+  }
+  
