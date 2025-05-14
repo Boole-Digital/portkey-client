@@ -3,7 +3,7 @@
 
 # 🔐 Portkey - decentralised passkey secured crypto wallet
 
-A **next-generation crypto wallet** that uses **passkeys** to create and manage user accounts—**no extensions, no seed phrases, no third-party custodians.** Just your passkey, your browser, your wallet.
+A **crypto wallet** that uses **passkeys** to create and manage user accounts—**no extensions, no seed phrases, no third-party custodians.** Just your passkey, your browser, your wallet.
 
 ---
 
