@@ -5,6 +5,14 @@
 
 A **crypto wallet** that uses **passkeys** to create and manage user accounts—**no extensions, no seed phrases, no third-party custodians.** Just your passkey, your browser, your wallet.
 
+## 🚪 Portkey Challenge
+
+To get started:
+
+1. Run the development server:
+   ```bash
+   npm run start
+
 ---
 
 ## 🚀 Features
