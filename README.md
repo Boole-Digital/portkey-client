@@ -13,6 +13,12 @@ To get started:
    ```bash
    npm run start
 
+2. Open chrome browser to
+   ```bash
+   localhost:3000/test
+
+Note: you need to run chrome or safari with either apple keychain or google passwords to have PRF support for this demo to work. 
+
 ---
 
 ## 🚀 Features
