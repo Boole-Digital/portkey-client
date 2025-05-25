@@ -75,6 +75,44 @@
         outputRef.current.textContent = msg;
       };
 
+      const create = async () => {
+        const result = await navigator.credentials.create({
+          publicKey: {
+            challenge: crypto.getRandomValues(new Uint8Array(32)), // must be provided by the server in a real scenario
+
+            rp: {
+              name: "Example Corp",
+              id: window.location.hostname, // optional if same as current domain
+            },
+
+            user: {
+              id: Uint8Array.from("user-id-1234", c => c.charCodeAt(0)), // must be a byte array
+              name: "user@example.com", // username
+              displayName: "Example User", // friendly name
+            },
+
+            pubKeyCredParams: [
+              {
+                type: "public-key",
+                alg: -7, // ES256 (ECDSA with SHA-256)
+              },
+              {
+                type: "public-key",
+                alg: -257, // RS256 (RSASSA-PKCS1-v1_5 with SHA-256)
+              }
+            ],
+
+            authenticatorSelection: {
+              userVerification: "required", // "preferred" or "discouraged" are other options
+            },
+
+            timeout: 60000,
+
+            attestation: "none" // or "direct", "indirect" depending on your requirements
+          }
+        });
+      }
+
       return React.createElement(React.Fragment, null, [
         React.createElement("h1", null, "🔐 Portara Vault Test"),
         React.createElement(PortaraVault, {
@@ -84,34 +122,46 @@
             write("✅ Signup:\n" + JSON.stringify(data, null, 2));
           },
           onSign: (data) => write("✍️ Signed Text:\n" + JSON.stringify(data, null, 2)),
-          onError: (err) => write("❌ Error:\n" + err.message),
+          onError: (err) => write("❌ Errorr:\n" + err.message),
         }),
-        React.createElement("button", { onClick: () => window.portaraSignup() }, "Create Wallet"),
+        React.createElement("button", { onClick: () => create() }, "Step 1. Create Key"),
+        React.createElement("br"),
+        React.createElement("br"),
+        React.createElement("button", { onClick: () => portaraSignup() }, "Step 2. Setup two Wallets, one SOL one ETH"),
+        React.createElement("br"),
+        React.createElement("br"),
         React.createElement("button", {
           onClick: () => {
             if (!walletData?.eth) return alert("Create wallet first.");
             window.portaraSign({
               chain: "eth",
-              message: "Sign this message with ETH key.",
+              message: "Step 3. Sign this message with ETH key.",
               cipherText: walletData.eth.cipherText,
               iv: walletData.eth.iv,
               salt: walletData.eth.salt,
             });
           }
         }, "Sign ETH Text"),
+        React.createElement("br"),
+        React.createElement("br"),
         React.createElement("button", {
           onClick: () => {
             if (!walletData?.solana) return alert("Create wallet first.");
             window.portaraSign({
               chain: "solana",
-              message: "Sign this message with SOL key.",
+              message: "Step 4. Sign this message with SOL key.",
               cipherText: walletData.solana.cipherText,
               iv: walletData.solana.iv,
               salt: walletData.solana.salt,
             });
           }
         }, "Sign SOL Text"),
-        React.createElement("pre", { ref: outputRef })
+        React.createElement("pre", { ref: outputRef }),
+        React.createElement("br"),
+        
+        React.createElement("p", {},  "Step 5. Try to get the private key"),
+        React.createElement("br"),
+        React.createElement("p", {},  "Some assumptions: The only secret should be the passkey, the IV, Cyphertext and Salt are assumed to be leaked and in the hands of you the attacker. You dont have physical access to the users machine. Lets set the bar above Metamask level securirity, can you break encryption without passkey? can a passkey from another website break the encryption? Can i see the dycryption? You cant change the code in public/index.html, unless you can show how a attacker could run that domain as an iframe, with changed code on a victims computer, without control of the domain."),
       ]);
     }
 
