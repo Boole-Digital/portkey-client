@@ -5,6 +5,20 @@
 
 A **crypto wallet** that uses **passkeys** to create and manage user accounts—**no extensions, no seed phrases, no third-party custodians.** Just your passkey, your browser, your wallet.
 
+## 🚪 Portkey Challenge
+
+To get started:
+
+1. Run the development server:
+   ```bash
+   npm i  then  npm run start
+
+2. Open chrome browser to
+   ```bash
+   localhost:3000/test
+
+Note: you need to run chrome or safari with either apple keychain or google passwords to have PRF support for this demo to work. 
+
 ---
 
 ## 🚀 Features
