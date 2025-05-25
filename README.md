@@ -11,7 +11,7 @@ To get started:
 
 1. Run the development server:
    ```bash
-   npm run start
+   npm i  then  npm run start
 
 2. Open chrome browser to
    ```bash
