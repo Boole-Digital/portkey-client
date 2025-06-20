@@ -1,16 +1,16 @@
 {
     "compilerOptions": {
-      "target": "es2020",
-      "module": "esnext",
+      "target": "ESNext",
+      "module": "ESNext",
       "jsx": "react-jsx",
+      "declaration": true,
+      "declarationDir": "dist",
       "outDir": "dist",
       "moduleResolution": "node",
       "esModuleInterop": true,
-      "skipLibCheck": true,
-      "forceConsistentCasingInFileNames": true,
       "strict": true,
-      "allowSyntheticDefaultImports": true
+      "skipLibCheck": true
     },
     "include": ["src"]
-  }
+}
   

@@ -1,166 +1,811 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Portara Vault</title>
-  <meta http-equiv="Content-Security-Policy" content="
+  <head>
+    <meta charset="UTF-8" />
+    <title>Portara Vault</title>
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
     default-src 'self';
     script-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net 'nonce-abc123';
     style-src 'self' 'unsafe-inline';
-    connect-src 'self';"
-  />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js" nonce="abc123"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.73.3/lib/index.iife.min.js" nonce="abc123"></script>
-  <script src="https://cdn.jsdelivr.net/npm/tweetnacl@1.0.3/nacl.min.js" nonce="abc123"></script>
-  <style>
-    body {
-      font-family: system-ui, sans-serif;
-      padding: 2rem;
-      color: #111;
-      max-width: 600px;
-      margin: auto;
-    }
-    button {
-      padding: 0.75rem 1.5rem;
-      font-size: 1rem;
-      border: none;
-      border-radius: 6px;
-      background: #2d72d9;
-      color: white;
-      cursor: pointer;
-      margin-bottom: 1rem;
-    }
-    pre {
-      padding: 1rem;
-      border: 1px solid #ccc;
-      font-size: 0.9rem;
-      white-space: pre-wrap;
-      height: 250px;
-      overflow-y: auto;
-      background: #f8f8f8;
-    }
-  </style>
-</head>
-<body>
-  <button id="createBtn">Create Wallet</button>
-  <pre id="log">[Vault Ready]</pre>
+    connect-src 'self' https://api.hyperliquid.xyz;"
+    />
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"
+      nonce="abc123"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.73.3/lib/index.iife.min.js"
+      nonce="abc123"
+    ></script>
+    <script
+      src="../bundle.js"
+      nonce="abc123"
+    ></script>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        padding: 2rem;
+        background: transparent;
+        color: #111;
+        max-width: 600px;
+        margin: auto;
+      }
+      button {
+        display: block;
+        width: 80%;
+        max-width: 300px;
+        padding: 0.75rem;
+        font-size: 1.25rem;
+        text-align: center;
+        border: none;
+        border-radius: 10px;
+        background: #7c70f4;
+        color: white;
+        cursor: pointer;
+        margin: 1rem auto;
+        box-sizing: border-box;
+        font-weight: bold;
+        text-transform: none;
+        transition: all 0.2s;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      button:hover {
+        background: #665dd0;
+        transform: translateY(-2px);
+      }
+      /* Hide the log completely */
+      pre {
+        display: none;
+        visibility: hidden;
+        height: 0;
+        width: 0;
+        overflow: hidden;
+        margin: 0;
+        padding: 0;
+        position: absolute;
+        opacity: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <button id="processSol" style="display: none">Confirm</button>
+    <button id="processEth" style="display: none">Confirm</button>
+    <button id="processEthTyped" style="display: none">Confirm</button>
+    <button id="processHyperliquidAgent" style="display: none">Confirm</button>
+    <!-- Log box removed -->
+    <!-- <pre id="log">[Vault Ready]</pre> -->
 
-  <script nonce="abc123">
-    window.onload = () => {
-      const log = (msg) => {
-        const box = document.getElementById("log");
-        box.textContent += "\n" + msg;
-        box.scrollTop = box.scrollHeight;
-        console.log("[Vault]", msg);
-      };
+    <script nonce="abc123">
 
-      const trustedOrigin = "http://localhost:3000";
 
-      window.parent.postMessage({ status: "ready", source: "iframe" }, trustedOrigin);
+      // window.addEventListener("message", (event) => {
+      //   console.log("🔥 RECEIVED message in iframe:", event);
+      // });
 
-      async function deriveKey(salt) {
-        const result = await navigator.credentials.get({
-          publicKey: {
-            challenge: crypto.getRandomValues(new Uint8Array(32)),
-            userVerification: "required",
-            rpId: window.location.hostname,
-            timeout: 60000,
-            extensions: { prf: { eval: { first: salt } } },
-          },
-        });
-        const prf = result.getClientExtensionResults().prf;
-        const shared = prf?.results?.first;
-        if (!shared) throw new Error("PRF unavailable");
-        const hash = await crypto.subtle.digest("SHA-256", shared);
-        return crypto.subtle.importKey("raw", hash, "AES-GCM", false, ["encrypt", "decrypt"]);
+      function fromBase64(base64) {
+        const binaryString = atob(base64);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        return bytes.buffer;
+      }
+
+      function convertBase64() {
+        const base64Input = document.getElementById("base64Input").value;
+        try {
+          const arrayBuffer = fromBase64(base64Input);
+          document.getElementById("output").textContent = JSON.stringify(
+            new Uint8Array(arrayBuffer)
+          );
+        } catch (e) {
+          document.getElementById("output").textContent =
+            "Invalid Base64 string";
+        }
+      }
+      window.onload = () => {
+
+
+
+        let pubkey = "";
+
+      const log = (msg) => console.log("[Vault]", msg);
+
+      function toBase64(uint8Array) {
+        return btoa(String.fromCharCode(...uint8Array));
+      }
+
+      function fromBase64(base64) {
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+          bytes[i] = binary.charCodeAt(i);
+        }
+        return bytes.buffer;
       }
 
       async function encrypt(key, iv, data) {
-        const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, data);
-        return btoa(String.fromCharCode(...new Uint8Array(encrypted)));
+        const encrypted = await crypto.subtle.encrypt(
+          { name: "AES-GCM", iv },
+          key,
+          data
+        );
+        return toBase64(new Uint8Array(encrypted));
       }
 
-      async function createWallet() {
-        const ethSalt = crypto.getRandomValues(new Uint8Array(32));
-        const ethIv = crypto.getRandomValues(new Uint8Array(12));
-        const solSalt = crypto.getRandomValues(new Uint8Array(32));
-        const solIv = crypto.getRandomValues(new Uint8Array(12));
+      async function createWalletAndPasskey(email = "user@portara.com") {
+        try {
+          log("🚀 Creating passkey and wallets...");
 
-        const ethKey = await deriveKey(ethSalt);
-        const solKey = await deriveKey(solSalt);
+          const salt = crypto.getRandomValues(new Uint8Array(32));
+          const ethIv = crypto.getRandomValues(new Uint8Array(12));
+          const solIv = crypto.getRandomValues(new Uint8Array(12));
 
-        const ethWallet = ethers.Wallet.createRandom();
-        const solKeypair = solanaWeb3.Keypair.generate();
+          const result = await navigator.credentials.create({
+            publicKey: {
+              challenge: crypto.getRandomValues(new Uint8Array(32)),
+              rp: { name: "Portara", id: window.location.hostname },
+              user: {
+                id: crypto.getRandomValues(new Uint8Array(32)),
+                name: email,
+                displayName: email.split("@")[0],
+              },
+              pubKeyCredParams: [{ type: "public-key", alg: -7 }],
+              timeout: 120000,
+              extensions: { prf: { eval: { first: salt } } },
+            },
+          });
 
-        const ethEnc = await encrypt(ethKey, ethIv, new TextEncoder().encode(ethWallet.privateKey));
-        const solEnc = await encrypt(solKey, solIv, solKeypair.secretKey);
+          const rawId = new Uint8Array(result.rawId);
+          const attestationObject = new Uint8Array(result.response.attestationObject);
+          const clientDataJSON = new Uint8Array(result.response.clientDataJSON);
+          const prf = result.getClientExtensionResults().prf;
+          const shared = prf?.results?.first;
+          if (!shared) throw new Error("PRF unavailable");
 
-        const data = {
-          eth: {
-            publicAddress: ethWallet.address,
-            cipherText: ethEnc,
-            iv: btoa(String.fromCharCode(...ethIv)),
-            salt: btoa(String.fromCharCode(...ethSalt)),
-          },
-          solana: {
-            publicAddress: solKeypair.publicKey.toBase58(),
-            cipherText: solEnc,
-            iv: btoa(String.fromCharCode(...solIv)),
-            salt: btoa(String.fromCharCode(...solSalt)),
-          },
+          const hash = await crypto.subtle.digest("SHA-256", shared);
+          const aesKey = await crypto.subtle.importKey("raw", hash, "AES-GCM", false, ["encrypt", "decrypt"]);
+
+          // Create wallets
+          const ethWallet = ethers.Wallet.createRandom();
+          const solKeypair = solanaWeb3.Keypair.generate();
+
+          const ethEnc = await encrypt(
+            aesKey,
+            ethIv,
+            new TextEncoder().encode(ethWallet.privateKey)
+          );
+
+          const solEnc = await encrypt(
+            aesKey,
+            solIv,
+            solKeypair.secretKey
+          );
+
+          const wallet = {
+            eth: {
+              publicAddress: ethWallet.address,
+              cipherText: ethEnc,
+              iv: toBase64(ethIv),
+              salt: toBase64(salt),
+            },
+            solana: {
+              publicAddress: solKeypair.publicKey.toBase58(),
+              cipherText: solEnc,
+              iv: toBase64(solIv),
+              salt: toBase64(salt),
+            },
+          };
+
+          const passkey = {
+            credentialId: toBase64(rawId),
+            attestationObject: toBase64(attestationObject),
+            clientDataJSON: toBase64(clientDataJSON),
+            transports: ["AUTHENTICATOR_TRANSPORT_INTERNAL"],
+          };
+
+          window.parent.postMessage(
+            {
+              command: "signup",
+              source: "iframe",
+              result: {
+                email,
+                passkey,
+                wallet,
+              },
+            },
+            "*"
+          );
+
+          log("✅ Wallets and passkey created");
+        } catch (err) {
+          log("❌ Error: " + err.message);
+          window.parent.postMessage(
+            {
+              command: "signup",
+              source: "iframe",
+              error: err.message,
+            },
+            "*"
+          );
+        }
+      }
+
+      // document.getElementById("createBtn").onclick = () => {
+      //   createWalletAndPasskey();
+      // };
+
+      
+
+   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const chain = urlParams.get("chain"); // "sol" or "eth"
+
+        const solBtn = document.getElementById("processSol");
+        const ethBtn = document.getElementById("processEth");
+        const ethTypedBtn = document.getElementById("processEthTyped");
+        const hyperliquidAgentBtn = document.getElementById("processHyperliquidAgent");
+
+        if (chain === "sol") {
+          solBtn.style.display = "block";
+        } else if (chain === "eth") {
+          ethBtn.style.display = "block";
+        } else if (chain === "eth-typed") {
+          ethTypedBtn.style.display = "block";
+        } else if (chain === "hyperliquid") {
+          hyperliquidAgentBtn.style.display = "block";
+        }
+
+        const hostname = window.location.hostname;
+        const rpId = `localhost`;
+        const parent = `http://localhost:3000`;
+
+        window.parent.postMessage(
+          { status: "ready", source: "iframe" },
+          parent
+        );
+        log("📡 Sent 'ready' to parent");
+
+        const deriveKey = (() => {
+          const masterKeyBytes = crypto.getRandomValues(new Uint8Array(32));
+          let encryptedKey = null;
+          let encryptedIv = null;
+          let clearTimer = null;
+
+          const rpId = window.location.hostname; // Use your domain or pass externally if needed
+
+          function fromBase64(str) {
+            return Uint8Array.from(atob(str), c => c.charCodeAt(0));
+          }
+
+          async function encryptInMemory(rawKey) {
+            const masterKey = await crypto.subtle.importKey("raw", masterKeyBytes, "AES-GCM", false, ["encrypt"]);
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, masterKey, rawKey);
+            return { encrypted, iv };
+          }
+
+          async function decryptInMemory(encrypted, iv) {
+            const masterKey = await crypto.subtle.importKey("raw", masterKeyBytes, "AES-GCM", false, ["decrypt"]);
+            const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, masterKey, encrypted);
+            return new Uint8Array(decrypted);
+          }
+
+          return async function deriveKey(salt, pubkey, log) {
+            if (!encryptedKey) {
+              log?.("🔐 Deriving PRF key...");
+              const result = await navigator.credentials.get({
+                publicKey: {
+                  challenge: crypto.getRandomValues(new Uint8Array(32)),
+                  userVerification: "required",
+                  rpId,
+                  timeout: 120000,
+                  extensions: { prf: { eval: { first: salt } } },
+                  allowCredentials: [
+                    {
+                      id: fromBase64(pubkey),
+                      type: "public-key",
+                    },
+                  ],
+                },
+              });
+
+              const prf = result.getClientExtensionResults().prf;
+              const shared = prf?.results?.first;
+              if (!shared) throw new Error("PRF unavailable");
+
+              const hash = await crypto.subtle.digest("SHA-256", shared);
+              const keyBytes = new Uint8Array(hash);
+
+              const { encrypted, iv } = await encryptInMemory(keyBytes);
+              encryptedKey = encrypted;
+              encryptedIv = iv;
+
+              clearTimer = setTimeout(() => {
+                encryptedKey = null;
+                encryptedIv = null;
+              }, 5 * 60 * 1000); // 5-minute timeout
+            } else {
+              clearTimeout(clearTimer);
+              clearTimer = setTimeout(() => {
+                encryptedKey = null;
+                encryptedIv = null;
+              }, 5 * 60 * 1000);
+            }
+
+            const rawKey = await decryptInMemory(encryptedKey, encryptedIv);
+            return crypto.subtle.importKey("raw", rawKey, "AES-GCM", false, ["encrypt", "decrypt"]);
+          };
+        })();
+
+        async function encrypt(key, iv, data) {
+          const encrypted = await crypto.subtle.encrypt(
+            { name: "AES-GCM", iv },
+            key,
+            data
+          );
+          return btoa(String.fromCharCode(...new Uint8Array(encrypted)));
+        }
+
+        async function decrypt(key, iv, base64) {
+          const ivBytes = Uint8Array.from(atob(iv), (c) => c.charCodeAt(0));
+          const cipherBytes = Uint8Array.from(atob(base64), (c) =>
+            c.charCodeAt(0)
+          );
+          const decrypted = await crypto.subtle.decrypt(
+            { name: "AES-GCM", iv: ivBytes },
+            key,
+            cipherBytes
+          );
+          return new Uint8Array(decrypted);
+        }
+
+        async function signEth({ cipherText, iv, salt, pubkey, transaction }) {
+          log("🔐 Starting Ethereum transaction signing...");
+          console.log("Raw transaction received:", transaction);
+
+          console.log({
+            cipherText, iv, salt, pubkey, transaction
+          })
+
+          try {
+            const key = await deriveKey(
+              Uint8Array.from(atob(salt), (c) => c.charCodeAt(0)),
+              pubkey
+            );
+            log("✅ Key derived successfully");
+
+            const decrypted = await decrypt(key, iv, cipherText);
+            log("✅ Private key decrypted successfully");
+
+            const privateKey = new TextDecoder().decode(decrypted);
+            const wallet = new ethers.Wallet(privateKey);
+            log("✅ Wallet instantiated from decrypted key");
+
+            let txObject = transaction;
+            if (typeof transaction === "string") {
+              try {
+                txObject = JSON.parse(transaction);
+                log("✅ Transaction JSON parsed successfully");
+              } catch (parseError) {
+                log("⚠️ Transaction is not valid JSON, using as-is");
+              }
+            }
+
+            const signedTx = await wallet.signTransaction(txObject);
+            log("✅ Ethereum transaction signed");
+
+            return { signedTx };
+          } catch (error) {
+            log("❌ Error during ETH signing: " + error.message);
+            throw error;
+          }
+        }
+
+        async function signEthereumTypedData({
+          cipherText,
+          iv,
+          salt,
+          pubkey,
+          typedData,
+        }) {
+          log("🔐 Starting Ethereum typed data signing...");
+          console.log("Typed data received:", typedData);
+
+          try {
+            const key = await deriveKey(
+              Uint8Array.from(atob(salt), (c) => c.charCodeAt(0)),
+              pubkey
+            );
+            log("✅ Key derived successfully");
+
+            const decrypted = await decrypt(key, iv, cipherText);
+            log("✅ Private key decrypted successfully");
+
+            const privateKey = new TextDecoder().decode(decrypted);
+            const wallet = new ethers.Wallet(privateKey);
+            log("✅ Wallet instantiated from decrypted key");
+
+            let parsedTypedData = typedData;
+            if (typeof typedData === "string") {
+              try {
+                parsedTypedData = JSON.parse(typedData);
+                log("✅ TypedData JSON parsed successfully");
+              } catch (parseError) {
+                log("⚠️ TypedData is not valid JSON, using as-is");
+                throw new Error("Invalid typed data format");
+              }
+            }
+
+            // Sign the typed data using EIP-712
+            const signature = await wallet.signTypedData(
+              parsedTypedData.domain,
+              parsedTypedData.types,
+              parsedTypedData.message
+            );
+            log("✅ Typed data signed successfully");
+
+            // Split the signature into v, r, s components
+            const splitSig = ethers.Signature.from(signature);
+
+            return {
+              signature,
+              v: splitSig.v,
+              r: splitSig.r,
+              s: splitSig.s,
+            };
+          } catch (error) {
+            log("❌ Error during ETH typed data signing: " + error.message);
+            throw error;
+          }
+        }
+
+        async function signHyperliquidAgent({
+          cipherText,
+          iv,
+          salt,
+          pubkey,
+        }) {
+
+
+          log("🔐 Starting Hyperliquid Agent account signing...");
+
+          try {
+            const key = await deriveKey(
+              Uint8Array.from(atob(salt), (c) => c.charCodeAt(0)),
+              pubkey
+            );
+            log("✅ Key derived successfully");
+
+            const decrypted = await decrypt(key, iv, cipherText);
+            log("✅ Private key decrypted successfully");
+
+            const privateKey = new TextDecoder().decode(decrypted);
+            
+            const wallet = hyperUtils.viemWalletFromPrivateKey(privateKey);
+            log("✅ Wallet instantiated from decrypted key");
+
+            const ethWallet = ethers.Wallet.createRandom();
+            log("✅ Created agent wallet " + ethWallet.address);
+            const AGENT_NAME = "AGENT_" + ethWallet.address.substring(0, 5)
+            
+            const agentWallet = hyperUtils.viemWalletFromPrivateKey(ethWallet.signingKey.privateKey)
+            log("✅ Creating agent " + AGENT_NAME);
+            const agentCreate = await hyperUtils.approveAgent(wallet, ethWallet.address, AGENT_NAME)
+            log(agentCreate)
+            log("✅ Created agent success");
+
+            return {
+              ...ethWallet,
+              privateKey: ethWallet.signingKey.privateKey,
+              AGENT_NAME
+            };
+          } catch (error) {
+            log("❌ Error during HyperliquidAgent create: " + error.message);
+            throw error;
+          }
+        }
+
+        async function signSol({ cipherText, iv, salt, pubkey, transaction }) {
+          log("🔐 Starting Solana transaction signing...");
+          try {
+            const key = await deriveKey(
+              Uint8Array.from(atob(salt), (c) => c.charCodeAt(0)),
+              pubkey
+            );
+            log("✅ Key derived successfully");
+
+            const decrypted = await decrypt(key, iv, cipherText);
+            log("✅ Private key decrypted successfully");
+
+            const keypair = solanaWeb3.Keypair.fromSecretKey(decrypted);
+            log("✅ Keypair created from decrypted key");
+
+            // Convert base64 transaction to Uint8Array
+            const txBytes = Uint8Array.from(atob(transaction), (c) =>
+              c.charCodeAt(0)
+            );
+            log(
+              "📦 Transaction bytes converted from base64, length: " +
+                txBytes.length
+            );
+
+            // Use VersionedTransaction to deserialize
+            log("🔄 Using VersionedTransaction deserializer");
+            const versionedTx =
+              solanaWeb3.VersionedTransaction.deserialize(txBytes);
+            log("✅ Transaction deserialized");
+
+            // Sign the transaction
+            versionedTx.sign([keypair]);
+            log("✅ Transaction signed");
+
+            // Serialize back to bytes and convert to base64
+            const serialized = versionedTx.serialize();
+            const signedTx = btoa(String.fromCharCode(...serialized));
+            log("✅ Transaction serialized to base64");
+
+            return { signedTx };
+          } catch (error) {
+            console.log({ error });
+            log("❌ Error during SOL signing: " + error.message);
+            throw error;
+          }
+        }
+
+        let pendingSolana = null;
+        let pendingEthereum = null;
+        let pendingEthereumTypedData = null;
+        let pendingHyperliquidAgent = null;
+
+        solBtn.onclick = async () => {
+          if (!pendingSolana) {
+            log("❌ No Solana transaction to process");
+            return;
+          }
+
+          try {
+            log("🔄 Processing Solana transaction...");
+            const result = await signSol(pendingSolana);
+            window.parent.postMessage(
+              {
+                id: pendingSolana.id,
+                command: "signSolanaTransaction",
+                result,
+                source: "iframe",
+              },
+              parent
+            );
+            log("✅ Solana transaction processed");
+            pendingSolana = null;
+          } catch (err) {
+            window.parent.postMessage(
+              {
+                id: pendingSolana?.id,
+                command: "signSolanaTransaction",
+                error: err.message,
+                source: "iframe",
+              },
+              parent
+            );
+            console.log(err);
+            log("❌ Error: " + err.message);
+            pendingSolana = null;
+          }
         };
 
-        window.parent.postMessage({ id: 0, command: "signup", result: data, source: "iframe" }, trustedOrigin);
-      }
-
-      async function signText({ chain, message, cipherText, iv, salt }) {
-        const decodedCipher = Uint8Array.from(atob(cipherText), (c) => c.charCodeAt(0));
-        const ivBytes = Uint8Array.from(atob(iv), (c) => c.charCodeAt(0));
-        const saltBytes = Uint8Array.from(atob(salt), (c) => c.charCodeAt(0));
-        const key = await deriveKey(saltBytes);
-        const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv: ivBytes }, key, decodedCipher);
-
-        if (chain === "eth") {
-          const privateKey = new TextDecoder().decode(decrypted);
-          const wallet = new ethers.Wallet(privateKey);
-          return { signature: await wallet.signMessage(message) };
-        }
-
-        if (chain === "solana") {
-          const secretKey = new Uint8Array(decrypted);
-          const msg = new TextEncoder().encode(message);
-          const signature = nacl.sign.detached(msg, secretKey);
-          return { signature: btoa(String.fromCharCode(...signature)) };
-        }
-
-        throw new Error("Unsupported chain: " + chain);
-      }
-
-      document.getElementById("createBtn").onclick = async () => {
-        try {
-          await createWallet();
-        } catch (err) {
-          window.parent.postMessage({ id: 0, command: "signup", error: err.message, source: "iframe" }, trustedOrigin);
-        }
-      };
-
-      window.addEventListener("message", async (event) => {
-        if (event.origin !== trustedOrigin || event.data?.source !== "parent") return;
-
-        const { id, command, data } = event.data;
-
-        try {
-          if (command === "signup") {
-            await createWallet();
-          } else if (command === "signText") {
-            const result = await signText(data);
-            window.parent.postMessage({ id, command, result, source: "iframe" }, trustedOrigin);
+        ethBtn.onclick = async () => {
+          if (!pendingEthereum) {
+            log("❌ No Ethereum transaction to process");
+            return;
           }
-        } catch (err) {
-          window.parent.postMessage({ id, command, error: err.message, source: "iframe" }, trustedOrigin);
-        }
-      });
-    };
-  </script>
-</body>
+
+          try {
+            log("🔄 Processing Ethereum transaction...");
+            const result = await signEth(pendingEthereum);
+            window.parent.postMessage(
+              {
+                id: pendingEthereum.id,
+                command: "signEthereumTransaction",
+                result,
+                source: "iframe",
+              },
+              parent
+            );
+            log("✅ Ethereum transaction processed");
+            pendingEthereum = null;
+          } catch (err) {
+            window.parent.postMessage(
+              {
+                id: pendingEthereum?.id,
+                command: "signEthereumTransaction",
+                error: err.message,
+                source: "iframe",
+              },
+              parent
+            );
+            log("❌ Error: " + err.message);
+            pendingEthereum = null;
+          }
+        };
+
+        hyperliquidAgentBtn.onclick = async () => {
+          if (!pendingHyperliquidAgent) {
+            log("❌ No Hyperliquid Agent data to process");
+            return;
+          }
+
+          try {
+            log("🔄 Processing Hyperliquid Agent data...");
+            const result = await signHyperliquidAgent(pendingHyperliquidAgent);
+            window.parent.postMessage(
+              {
+                id: pendingHyperliquidAgent.id,
+                command: "signHyperliquidAgent",
+                result,
+                source: "iframe",
+              },
+              parent
+            );
+            log("✅ Hyperliquid Agent processed");
+            pendingHyperliquidAgent = null;
+          } catch (err) {
+            window.parent.postMessage(
+              {
+                id: pendingHyperliquidAgent?.id,
+                command: "error",
+                error: err.message,
+                source: "iframe",
+              },
+              parent
+            );
+            log("❌ Error: " + err.message);
+            pendingHyperliquidAgent = null;
+          }
+        };
+
+        ethTypedBtn.onclick = async () => {
+          if (!pendingEthereumTypedData) {
+            log("❌ No Ethereum typed data to process");
+            return;
+          }
+
+          try {
+            log("🔄 Processing Ethereum typed data...");
+            const result = await signEthereumTypedData(
+              pendingEthereumTypedData
+            );
+            window.parent.postMessage(
+              {
+                id: pendingEthereumTypedData.id,
+                command: "signEthereumTypedData",
+                result,
+                source: "iframe",
+              },
+              parent
+            );
+            log("✅ Ethereum typed data processed");
+            pendingEthereumTypedData = null;
+          } catch (err) {
+            window.parent.postMessage(
+              {
+                id: pendingEthereumTypedData?.id,
+                command: "signEthereumTypedData",
+                error: err.message,
+                source: "iframe",
+              },
+              parent
+            );
+            log("❌ Error: " + err.message);
+            pendingEthereumTypedData = null;
+          }
+        };
+
+        window.addEventListener("message", async (event) => {
+          console.log("GOGO", event)
+
+          console.log(event.origin, event.data?.source)
+
+          // if (event.origin !== parent || event.data?.source !== "parent")
+          //   return;
+
+          const { id, command, data } = event.data;
+          log(`📥 Received command: ${command}`);
+
+          if (command === "signup") {
+            const email = data?.email || "user@portara.com";
+            createWalletAndPasskey(email);
+          }
+
+          // if (command === "signSolanaTransaction") {
+          //   log("📝 Received Solana transaction to sign");
+          //   pendingSolana = { ...data, id };
+          //   log("✅ Solana transaction stored, click button to sign");
+          // } else if (command === "signEthereumTransaction") {
+          //   log("📝 Received Ethereum transaction to sign");
+          //   pendingEthereum = { ...data, id };
+          //   log("✅ Ethereum transaction stored, click button to sign");
+          // } else if (command === "signEthereumTypedData") {
+          //   log("📝 Received Ethereum typed data to sign");
+          //   pendingEthereumTypedData = { ...data, id };
+          //   log("✅ Ethereum typed data stored, click button to sign");
+          // } else if (command === "signHyperliquidAgent") {
+          //   log("📝 Received request for a HyperliquidAgent");
+          //   pendingHyperliquidAgent = { ...data, id };
+          //   log("✅ HyperliquidAgent data stored, click button to sign");
+
+
+
+           if (command === "showButton") {
+            const { buttonType, label, } = data;
+
+            console.log({buttonType, label, })
+
+            // Hide all existing remote buttons
+            document.querySelectorAll(".remote-btn").forEach(btn => btn.remove());
+
+            // Create and show the button
+            const btn = document.createElement("button");
+            btn.className = "remote-btn";
+            btn.textContent = label || "Confirm";
+
+            
+
+            btn.onclick = async () => {
+              console.log("RUNNING")
+
+              if (buttonType == "signup") {
+                console.log("createWalletAndPasskey()")
+                createWalletAndPasskey()
+              }
+              if (buttonType == "signEthTx") {
+
+                console.log("signEthTx()")
+                log("📝 Received Ethereum transaction to sign");
+                pendingEthereum = { ...data.data, id, transaction: "0x" };
+
+                console.log(data.data)
+
+                log("🔄 Processing Ethereum transaction...");
+                const result = await signEth(pendingEthereum);
+                window.parent.postMessage(
+                  {
+                    id: pendingEthereum.id,
+                    command: "signEthereumTransaction",
+                    result,
+                    source: "iframe",
+                  },
+                  parent
+                );
+                log("✅ Ethereum transaction processed");
+                pendingEthereum = null;
+
+              }
+              
+            };
+            document.body.appendChild(btn);
+          }
+        });
+      };
+    </script>
+  </body>
 </html>
