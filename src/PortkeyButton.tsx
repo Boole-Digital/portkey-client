@@ -2,6 +2,11 @@
 import React, { useEffect, useRef } from 'react';
 import { useBackgroundIframe } from './BackgroundIframeContext';
 
+
+// Todo remove hide quick fix
+// Issue is that if i dont render the button, the IFRAME ref gets lost.
+// Made a bad fix so that i just render it on all pages but hide it.
+
 interface PortkeyButtonProps {
   label: string;
   command: string;
@@ -11,6 +16,7 @@ interface PortkeyButtonProps {
   id?: number;
   data?: Record<string, any>;
   className?: string;
+  hide: any;
 }
 
 export const PortkeyButton: React.FC<PortkeyButtonProps> = ({
@@ -22,6 +28,7 @@ export const PortkeyButton: React.FC<PortkeyButtonProps> = ({
   id = 1,
   data = {},
   className,
+  hide
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const { setMountTo, setIframeSrc } = useBackgroundIframe();
@@ -73,5 +80,5 @@ export const PortkeyButton: React.FC<PortkeyButtonProps> = ({
     return () => window.removeEventListener('message', handleReady);
   }, []);
 
-  return <div ref={ref} className={className} style={{ display: 'inline-block', width: 300, height: 47 }} />;
+  return <div ref={ref} className={className} style={{width: 300, height: 47, display: hide ? 'none' : 'inline-block' }} />;
 };
