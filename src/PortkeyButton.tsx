@@ -1,10 +1,11 @@
-import React, { useEffect } from 'react';
-import { signEthereumTransaction } from './ActionModule';
+// PortkeyButton.tsx
+import React, { useEffect, useRef } from 'react';
+import { useBackgroundIframe } from './BackgroundIframeContext';
 
 interface PortkeyButtonProps {
-  label: string; 
+  label: string;
   command: string;
-  origin: string; 
+  origin: string;
   buttonType: string;
   iframeLabel?: string;
   id?: number;
@@ -20,118 +21,57 @@ export const PortkeyButton: React.FC<PortkeyButtonProps> = ({
   iframeLabel,
   id = 1,
   data = {},
-  className
-}: any) => {
-//   const handleClick = async () => {
-//     const iframe = document.getElementById('portkey') as HTMLIFrameElement | null;
+  className,
+}) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const { setMountTo, setIframeSrc } = useBackgroundIframe();
 
-//     if (!iframe || !iframe.contentWindow) {
-//       console.warn('Iframe not ready');
-//       return;
-//     } 
-//     await signEthereumTransaction({
-//         iframe,
-//         vaultOrigin: origin,
-//         pubkey: data.pubkey,
-//         vault: {
-//             iv: "u34uz7FHxBzMTBC5",
-//             cipherText: "ns3SYiURpT67ZfNxE/Vcb7aeOub9UvYMIbHyZDBVW+8=",
-//             salt: "ns3SYiURpT67ZfNxE/Vcb7aeOub9UvYMIbHyZDBVW+8="
-//         },
-//         transactionBase64: "0x",
-//         onSigned: () => { console.log("SIGNED HAPPY DAYS")},
-//         onError: () => { console.log("ERROR SAD DAYS")},
-//     })
-//   };
+  const sendIframeMessages = () => {
+    const iframe = document.getElementById('portkey') as HTMLIFrameElement | null;
+    if (!iframe?.contentWindow) return;
 
-    useEffect(() => {
-        const iframe = document.getElementById('portkey') as HTMLIFrameElement | null;
-        if (!iframe || !iframe.contentWindow) {
-          console.warn('Iframe is not accessible when ready message received');
-          return;
-        }
+    iframe.contentWindow.postMessage({ id, command: 'clearButton', source: 'parent' }, origin);
 
-        console.log("sending clearButton")
-
-        iframe.contentWindow.postMessage(
-            {
-                id,
-                command: 'clearButton',
-                source: 'parent',
-            },
-            origin
-        );
-
-        iframe.contentWindow.postMessage(
-            {
-              id,
-              command: 'showButton',
-              source: 'parent',
-              data: {
-                label: iframeLabel || label,
-                buttonType,
-                command,
-                data,
-                id
-              }
-            },
-            origin
-          );
-    }, [label]);
+    iframe.contentWindow.postMessage(
+      {
+        id,
+        command: 'showButton',
+        source: 'parent',
+        data: {
+          label: iframeLabel || label,
+          buttonType,
+          command,
+          data,
+          id,
+        },
+      },
+      origin
+    );
+  };
 
   useEffect(() => {
+    if (ref.current) {
+      setMountTo(ref.current);
+      setIframeSrc(origin); // optional: only if needed
+      sendIframeMessages();
+    }
 
-    console.log("change label", label)
-    const handleIframeReady = (event: MessageEvent) => {
-
-        if (event.origin !== origin) return;
-        if (event.data?.status !== 'ready' || event.data?.source !== 'iframe') return;
-    
-        console.log("Received 'ready' from iframe");
-    
-        const iframe = document.getElementById('portkey') as HTMLIFrameElement | null;
-        if (!iframe || !iframe.contentWindow) {
-          console.warn('Iframe is not accessible when ready message received');
-          return;
-        }
-
-        console.log("sending clearButton")
-
-        iframe.contentWindow.postMessage(
-            {
-                id,
-                command: 'clearButton',
-                source: 'parent',
-            },
-            origin
-        );
-
-      iframe.contentWindow.postMessage(
-        {
-          id,
-          command: 'showButton',
-          source: 'parent',
-          data: {
-            label: iframeLabel || label,
-            buttonType,
-            command,
-            data,
-            id
-          }
-        },
-        origin
-      );
-    };
-  
-    window.addEventListener('message', handleIframeReady);
     return () => {
-        window.removeEventListener('message', handleIframeReady)
+      // Optional: remove mount if unmounted, or leave if persistent across routes
+      setMountTo(null);
     };
   }, [label]);
 
+  useEffect(() => {
+    const handleReady = (event: MessageEvent) => {
+      if (event.origin !== origin) return;
+      if (event.data?.status !== 'ready' || event.data?.source !== 'iframe') return;
+      sendIframeMessages();
+    };
 
-  
-  
+    window.addEventListener('message', handleReady);
+    return () => window.removeEventListener('message', handleReady);
+  }, []);
 
-  return (<></>);
+  return <div ref={ref} className={className} style={{ display: 'inline-block', width: 300, height: 47 }} />;
 };

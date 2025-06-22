@@ -764,15 +764,12 @@
 
 
            if (command === "clearButton") {
-            console.log("removing button")
             const btn = document.getElementById("remote-btn-12r142") 
             if (btn)
               btn.remove();
            }
            if (command === "showButton") {
             const { buttonType, label, } = data;
-
-            console.log({buttonType, label, })
 
             // Hide all existing remote buttons
             document.querySelectorAll(".remote-btn").forEach(btn => btn.remove());
@@ -796,10 +793,7 @@
 
                 console.log("signEthTx()")
                 log("📝 Received Ethereum transaction to sign");
-                pendingEthereum = { ...data.data, id, transaction: {
-                  to: "0x0000000000000000000000000000000000000000",
-                  data: "0x1234",
-                } };
+                pendingEthereum = { ...data.data, id };
 
                 console.log(data.data)
 

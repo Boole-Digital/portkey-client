@@ -1,12 +1,18 @@
-import { createContext } from 'react';
+// BackgroundIframeContext.tsx
+import React, { createContext, useContext } from 'react';
 
-export interface BackgroundIframeContextType {
+type MountTarget = HTMLElement | null;
+
+export const BackgroundIframeContext = createContext<{
   iframeSrc: string;
   setIframeSrc: (src: string) => void;
-}
+  mountTo: MountTarget;
+  setMountTo: (el: MountTarget) => void;
+  parkingSlotRef: React.RefObject<HTMLDivElement>;
+} | null>(null);
 
-// 👇 Create the context with a non-null default (or `null` + runtime check later)
-export const BackgroundIframeContext = createContext<BackgroundIframeContextType>({
-  iframeSrc: 'about:blank',
-  setIframeSrc: () => {}
-});
+export const useBackgroundIframe = () => {
+  const ctx = useContext(BackgroundIframeContext);
+  if (!ctx) throw new Error('Must be used inside BackgroundIframeProvider');
+  return ctx;
+};

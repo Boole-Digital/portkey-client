@@ -21,13 +21,13 @@ export default function App() {
     <BackgroundIframeProvider initialSrc="http://localhost:3002">
       <BrowserRouter>
         <nav style={{ }}>
-          <Link to="/">Home</Link> | <Link to="/about">About</Link>
+          <Link to="/">Home</Link> | <Link to="/about">About</Link> | <Link to="/nothing">Nothing</Link>
         </nav>
         <Routes>
           <Route path="/" element={
             <div style={{  color: 'white' }}>
               <h1>Home</h1>
-              <PortkeyButton
+              {/* <PortkeyButton
                 label="Create Wallet"
                 buttonType="create"
                 origin="http://localhost:3002"
@@ -36,7 +36,7 @@ export default function App() {
                   pubkey: 'abc123',
                   skipVerification: true
                 }}
-              />
+              /> */}
 
 
 
@@ -53,7 +53,11 @@ export default function App() {
                   "cipherText": "wGxrc3rbegvlvL2MbpmSiSizjydtZi6n5yKEtJcnvP+oymKggPoFR31VEsXYFK8W0lKAxYkmY/98KO5APtRrgOSChdl94oxwPkKwdURdxuAcSw==",
                   "iv": "u34uz7FHxBzMTBC5",
                   "salt": "ns3SYiURpT67ZfNxE/Vcb7aeOub9UvYMIbHyZDBVW+8=",
-                  "chain": "evm"
+                  "chain": "evm",
+                  "transaction": {
+                    data: "0x11",
+                    to: "0x0000000000000000000000000000000000000000"
+                  }
                 }}
               />
             </div>
@@ -61,7 +65,7 @@ export default function App() {
           <Route path="/about" element={<div>
             <h1>About</h1>
             <PortkeyButton
-                label="Sign Transaction  from About"
+                label="Sign Transaction from About"
                 buttonType="signEthTx"
                 origin="http://localhost:3002"
                 command="signEthereumTransaction"
@@ -72,9 +76,14 @@ export default function App() {
                   "cipherText": "wGxrc3rbegvlvL2MbpmSiSizjydtZi6n5yKEtJcnvP+oymKggPoFR31VEsXYFK8W0lKAxYkmY/98KO5APtRrgOSChdl94oxwPkKwdURdxuAcSw==",
                   "iv": "u34uz7FHxBzMTBC5",
                   "salt": "ns3SYiURpT67ZfNxE/Vcb7aeOub9UvYMIbHyZDBVW+8=",
-                  "chain": "evm"
+                  "chain": "evm",
+                  "transaction": {
+                    data: "0x00",
+                    to: "0x0000000000000000000000000000000000000000"
+                  }
                 }}
               /></div>} />
+          <Route path="/nothing" element={<div></div>}></Route>
         </Routes>
       </BrowserRouter>
     </BackgroundIframeProvider>
