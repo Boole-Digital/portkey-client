@@ -114,7 +114,7 @@ export function signSolanaTransaction({
   );
 }
 
-export function signEthereumTransaction({
+export async function signEthereumTransaction({
   iframe,
   vaultOrigin,
   pubkey,
@@ -123,13 +123,23 @@ export function signEthereumTransaction({
   onSigned,
   onError,
 }: SignTransactionOptions) {
-  if (!iframe?.contentWindow) {
+
+//   console.log(iframe?.contentWindow)
+  if (!iframe) {
     onError?.("Iframe not ready");
     return;
   }
 
+  console.log('HELOOOO');
+
   window.addEventListener("message", (event) => {
-    if (event.origin !== vaultOrigin || event.data?.command !== "signEthereumTransaction") return;
+
+    console.log('event', event);
+
+
+    if (event.origin !== vaultOrigin || event.data?.command !== "signedEthereumTransaction") return;
+
+    
 
     if (event.data.result?.signedTx) {
       onSigned?.(event.data.result.signedTx);
@@ -138,7 +148,7 @@ export function signEthereumTransaction({
     }
   });
 
-  iframe.contentWindow.postMessage(
+  iframe?.contentWindow?.postMessage(
     {
       id: 2,
       command: "signEthereumTransaction",

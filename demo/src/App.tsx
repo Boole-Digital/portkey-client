@@ -16,15 +16,17 @@ export default function App() {
   //     'pubkey123'
   //   );
   // };
+  
   return (
     <BackgroundIframeProvider initialSrc="http://localhost:3002">
       <BrowserRouter>
-        <nav style={{ padding: '1rem' }}>
+        <nav style={{ }}>
           <Link to="/">Home</Link> | <Link to="/about">About</Link>
         </nav>
         <Routes>
           <Route path="/" element={
-            <div style={{ padding: '2rem', color: 'white' }}>
+            <div style={{  color: 'white' }}>
+              <h1>Home</h1>
               <PortkeyButton
                 label="Create Wallet"
                 buttonType="create"
@@ -40,7 +42,7 @@ export default function App() {
 
 
               <PortkeyButton
-                label="Sign Transaction"
+                label="Sign Transaction from home"
                 buttonType="signEthTx"
                 origin="http://localhost:3002"
                 command="signEthereumTransaction"
@@ -56,7 +58,23 @@ export default function App() {
               />
             </div>
           } />
-          <Route path="/about" element={<h1>About</h1>} />
+          <Route path="/about" element={<div>
+            <h1>About</h1>
+            <PortkeyButton
+                label="Sign Transaction  from About"
+                buttonType="signEthTx"
+                origin="http://localhost:3002"
+                command="signEthereumTransaction"
+                data={{
+                  "pubkey": '0QlsRJstsYum/+lehA3bcn4a02Y=',
+                  "wid": "c4b31af5-a783-49a9-b1a1-013dc369add1",
+                  "address": "0x0d96eBfABF30e86fa61CAc414EA869736f9Bf88c",
+                  "cipherText": "wGxrc3rbegvlvL2MbpmSiSizjydtZi6n5yKEtJcnvP+oymKggPoFR31VEsXYFK8W0lKAxYkmY/98KO5APtRrgOSChdl94oxwPkKwdURdxuAcSw==",
+                  "iv": "u34uz7FHxBzMTBC5",
+                  "salt": "ns3SYiURpT67ZfNxE/Vcb7aeOub9UvYMIbHyZDBVW+8=",
+                  "chain": "evm"
+                }}
+              /></div>} />
         </Routes>
       </BrowserRouter>
     </BackgroundIframeProvider>

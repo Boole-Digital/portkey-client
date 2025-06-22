@@ -18,10 +18,13 @@ export const BackgroundIframeProvider: React.FC<BackgroundIframeProviderProps> =
         position: 'fixed',
         top: 0,
         left: 0,
+        // height: 0,
+        // width: 0,
         zIndex: 1,
-        width: '30vw',
-        height: '20vh',
-        overflow: 'hidden',
+        padding:0,
+        margin:0,
+        background:"rgba(0,0,0,0)",
+        overflow: 'visible',
         pointerEvents: 'auto'
       }}>
         <iframe
@@ -30,9 +33,17 @@ export const BackgroundIframeProvider: React.FC<BackgroundIframeProviderProps> =
           src={iframeSrc}
           title="Background Iframe"
           style={{
-            width: '100%',
-            height: '100%',
-            border: 'none'
+            position: 'fixed',
+            // bottom: '20px',
+            // right: '20px',
+            width: '300px',
+            height: '47px',
+            border: 'none',
+            zIndex: 1000,
+            backgroundColor: 'transparent',
+            pointerEvents: 'auto',
+            borderRadius: "12px",
+            overflow: "hidden"
           }}
         />
       </div>

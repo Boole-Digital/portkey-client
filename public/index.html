@@ -24,36 +24,43 @@
       nonce="abc123"
     ></script>
     <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+      }
       body {
         font-family: system-ui, sans-serif;
-        padding: 2rem;
+        /* padding: 2rem; */
         background: transparent;
         color: #111;
         max-width: 600px;
-        margin: auto;
+        border-radius: 10px; 
+        /* margin: auto; */
       }
       button {
         display: block;
-        width: 80%;
+        width: 100%;
         max-width: 300px;
         padding: 0.75rem;
         font-size: 1.25rem;
         text-align: center;
         border: none;
-        border-radius: 10px;
+        /* border-radius: 10px; */
         background: #7c70f4;
         color: white;
         cursor: pointer;
-        margin: 1rem auto;
         box-sizing: border-box;
         font-weight: bold;
         text-transform: none;
         transition: all 0.2s;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        /* box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); */
       }
       button:hover {
         background: #665dd0;
-        transform: translateY(-2px);
+        /* transform: translateY(-2px); */
+      }
+      .remote-btn {
+        margin: 0;
       }
       /* Hide the log completely */
       pre {
@@ -70,10 +77,10 @@
     </style>
   </head>
   <body>
-    <button id="processSol" style="display: none">Confirm</button>
-    <button id="processEth" style="display: none">Confirm</button>
-    <button id="processEthTyped" style="display: none">Confirm</button>
-    <button id="processHyperliquidAgent" style="display: none">Confirm</button>
+    <button id="processSol" style="display: none; margin: 0">Confirm</button>
+    <button id="processEth" style="display: none; margin: 0">Confirm</button>
+    <button id="processEthTyped" style="display: none; margin: 0">Confirm</button>
+    <button id="processHyperliquidAgent" style="display: none; margin: 0">Confirm</button>
     <!-- Log box removed -->
     <!-- <pre id="log">[Vault Ready]</pre> -->
 
@@ -281,7 +288,7 @@
 
         window.parent.postMessage(
           { status: "ready", source: "iframe" },
-          parent
+          "http://localhost:5173/"
         );
         log("📡 Sent 'ready' to parent");
 
@@ -410,6 +417,8 @@
                 log("⚠️ Transaction is not valid JSON, using as-is");
               }
             }
+
+            console.log("txObject", txObject)
 
             const signedTx = await wallet.signTransaction(txObject);
             log("✅ Ethereum transaction signed");
@@ -625,7 +634,7 @@
             window.parent.postMessage(
               {
                 id: pendingEthereum.id,
-                command: "signEthereumTransaction",
+                command: "signedEthereumTransaction",
                 result,
                 source: "iframe",
               },
@@ -721,15 +730,15 @@
         };
 
         window.addEventListener("message", async (event) => {
-          console.log("GOGO", event)
+          // console.log("GOGO", event)
 
-          console.log(event.origin, event.data?.source)
+          // console.log(event.origin, event.data?.source)
 
           // if (event.origin !== parent || event.data?.source !== "parent")
           //   return;
 
           const { id, command, data } = event.data;
-          log(`📥 Received command: ${command}`);
+          // log(`📥 Received command: ${command}`);
 
           if (command === "signup") {
             const email = data?.email || "user@portara.com";
@@ -754,7 +763,12 @@
           //   log("✅ HyperliquidAgent data stored, click button to sign");
 
 
-
+           if (command === "clearButton") {
+            console.log("removing button")
+            const btn = document.getElementById("remote-btn-12r142") 
+            if (btn)
+              btn.remove();
+           }
            if (command === "showButton") {
             const { buttonType, label, } = data;
 
@@ -767,6 +781,7 @@
             const btn = document.createElement("button");
             btn.className = "remote-btn";
             btn.textContent = label || "Confirm";
+            btn.id = "remote-btn-12r142";
 
             
 
@@ -781,7 +796,10 @@
 
                 console.log("signEthTx()")
                 log("📝 Received Ethereum transaction to sign");
-                pendingEthereum = { ...data.data, id, transaction: "0x" };
+                pendingEthereum = { ...data.data, id, transaction: {
+                  to: "0x0000000000000000000000000000000000000000",
+                  data: "0x1234",
+                } };
 
                 console.log(data.data)
 
