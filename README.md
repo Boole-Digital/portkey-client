@@ -24,6 +24,16 @@ Think **Turnkey**, but without a third-party HSM: the private key _never leaves 
 
 ---
 
+## ❤️ Acknowledgements
+
+- `ethers.js` & `@solana/web3.js` for crypto
+- Design inspired by Turnkey
+
+> “The best password is no password” → the best wallet is no seed phrase.  
+> Welcome to passkey-powered web3 with **Portkey**.
+
+---
+
 ## 🚀 Quick Start
 
 ### 1. Install
@@ -323,11 +333,3 @@ MIT © Your Company Name – Use at your own risk. Experimental software; audit 
 
 ---
 
-## ❤️ Acknowledgements
-
-- `webauthn-json` for clean credential serialization
-- `ethers.js` & `@solana/web3.js` for crypto
-- Design inspired by Turnkey
-
-> “The best password is no password” → the best wallet is no seed phrase.  
-> Welcome to passkey-powered web3 with **Portkey**.
