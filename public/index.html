@@ -535,6 +535,8 @@
         }
 
         async function signSol({ cipherText, iv, salt, pubkey, transaction }) {
+
+          console.log({cipherText, iv, salt, pubkey, transaction})
           log("🔐 Starting Solana transaction signing...");
           try {
             const key = await deriveKey(
@@ -550,7 +552,7 @@
             log("✅ Keypair created from decrypted key");
 
             // Convert base64 transaction to Uint8Array
-            const txBytes = Uint8Array.from(atob(transaction), (c) =>
+            const txBytes = Uint8Array.from(atob(transaction.data), (c) =>
               c.charCodeAt(0)
             );
             log(
@@ -829,7 +831,7 @@
                 
                 window.parent.postMessage(
                   {
-                    id: pendingEthereum.id,
+                    id: pendingSolana.id,
                     command: "signedSolanaTransaction",
                     result,
                     source: "iframe",

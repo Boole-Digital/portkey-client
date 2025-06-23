@@ -132,16 +132,10 @@ export async function signEthereumTransaction({
     return;
   }
 
-  console.log('HELOOOO');
 
   window.addEventListener("message", (event) => {
 
-    console.log('event', event);
-
-
     if (event.origin !== vaultOrigin || event.data?.command !== "signedEthereumTransaction") return;
-
-    
 
     if (event.data.result?.signedTx) {
       onSigned?.(event.data.result.signedTx);

@@ -43,6 +43,8 @@
         "typescript": "^5.0.0"
     },
     "dependencies": {
+        "@solana/web3.js": "^1.98.2",
+        "bs58": "^6.0.0",
         "esbuild": "^0.25.5",
         "react-router-dom": "^7.6.2"
     }

@@ -1,11 +1,12 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { usePortkeyWatcher } from 'react-background-iframe'; // adjust path if needed
+import { usePortkeyWatcher } from 'react-background-iframe';
 
 const allowedOrigin = 'http://localhost:3002';
 
 export const IframeConsole: React.FC = () => {
   const [logs, setLogs] = useState<string[]>([]);
   const logRef = useRef<HTMLDivElement>(null);
+  const [autoScroll, setAutoScroll] = useState(true);
 
   usePortkeyWatcher((msg, origin) => {
     const timestamp = new Date().toLocaleTimeString();
@@ -15,8 +16,24 @@ export const IframeConsole: React.FC = () => {
 
   useEffect(() => {
     const el = logRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [logs]);
+    if (el && autoScroll) {
+      el.scrollTop = 0;
+    }
+  }, [logs, autoScroll]);
+
+  // Watch scroll events to toggle autoScroll off if user scrolls away
+  useEffect(() => {
+    const el = logRef.current;
+    if (!el) return;
+
+    const handleScroll = () => {
+      // If user scrolled down even a little, disable autoScroll
+      setAutoScroll(el.scrollTop < 10);
+    };
+
+    el.addEventListener('scroll', handleScroll);
+    return () => el.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <div
@@ -35,8 +52,11 @@ export const IframeConsole: React.FC = () => {
       {logs.length === 0 ? (
         <p style={{ color: '#555' }}>No data detected leaking.</p>
       ) : (
-        logs.map((msg, i) => (
-          <pre key={i} style={{ whiteSpace: 'pre-wrap', marginBottom: '1rem' }}>
+        [...logs].reverse().map((msg, i) => (
+          <pre
+            key={i}
+            style={{ whiteSpace: 'pre-wrap', marginBottom: '1rem' }}
+          >
             {msg}
           </pre>
         ))
