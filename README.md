@@ -4,6 +4,7 @@ _Create passkey-secured, self-custodial crypto wallets & sign transactions strai
 [![npm version](https://img.shields.io/npm/v/@your-scope/portkey.svg)](https://www.npmjs.com/package/@your-scope/portkey)
 [![bundle size](https://img.shields.io/bundlephobia/minzip/@your-scope/portkey)](https://bundlephobia.com/result?p=@your-scope/portkey)
 [![license](https://img.shields.io/npm/l/@your-scope/portkey)](LICENSE)
+// module coming soon
 
 Portkey brings the power of **FIDO2 / WebAuthn passkeys** to web3.  
 Think **Turnkey**, but without a third-party HSM: the private key _never leaves the user’s device_ and is never decryptable by your app, browser extensions, or Portkey itself.
