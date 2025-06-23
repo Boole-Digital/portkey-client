@@ -8,11 +8,13 @@ export const BackgroundIframeContext = createContext<{
   setIframeSrc: (src: string) => void;
   mountTo: MountTarget;
   setMountTo: (el: MountTarget) => void;
-  parkingSlotRef: React.RefObject<HTMLDivElement>;
+  parkingSlotRef: React.RefObject<HTMLDivElement | null>;
+  iframeRef: React.RefObject<HTMLIFrameElement | null>;
+  moveIframeTo: (targetEl: HTMLElement | null) => void;
 } | null>(null);
 
 export const useBackgroundIframe = () => {
   const ctx = useContext(BackgroundIframeContext);
-  if (!ctx) throw new Error('Must be used inside BackgroundIframeProvider');
+  if (!ctx) throw new Error('useBackgroundIframe must be used inside BackgroundIframeProvider');
   return ctx;
 };

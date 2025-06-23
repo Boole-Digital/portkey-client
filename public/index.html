@@ -796,16 +796,19 @@
 
                 console.log(data.data)
 
+
+
                 log("🔄 Processing Ethereum transaction...");
                 const result = await signEth(pendingEthereum);
+               
                 window.parent.postMessage(
                   {
                     id: pendingEthereum.id,
-                    command: "signEthereumTransaction",
+                    command: "signedEthereumTransaction",
                     result,
                     source: "iframe",
                   },
-                  parent
+                  "*"
                 );
                 log("✅ Ethereum transaction processed");
                 pendingEthereum = null;
@@ -822,14 +825,16 @@
 
                 log("🔄 Processing Solana transaction...");
                 const result = await signSol(pendingSolana);
+
+                
                 window.parent.postMessage(
                   {
                     id: pendingEthereum.id,
-                    command: "signSolanaTransaction",
+                    command: "signedSolanaTransaction",
                     result,
                     source: "iframe",
                   },
-                  parent
+                  "*"
                 );
                 log("✅ Solana transaction processed");
                 pendingSolana = null;
