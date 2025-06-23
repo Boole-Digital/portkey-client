@@ -2,9 +2,9 @@
 
 # 🔐 Portkey - decentralised passkey secured crypto wallet
 
-A **crypto wallet** that uses **passkeys** to create and manage user accounts—**no extensions, no seed phrases, no third-party custodians.** Just your passkey, your browser, your wallet.
+A cross chain **crypto wallet** that uses **passkeys** to create and manage user accounts—**no extensions, no seed phrases, no third-party custodians.** Just your passkey, your browser, your wallet.
 
-## 🚪 Portkey Challenge
+## 🚪 Portkey app
 
 To get started:
 
@@ -25,7 +25,7 @@ Android users may have to update their OS to latest to have PRF support
 ## 🚀 Features
 
 - **Passkey-Based Authentication**  
-  Users register and authenticate using passkeys—natively supported by most mobile and desktop devices. Think apple pay user experience.
+  Users register and authenticate using passkeys—natively supported by most mobile and desktop devices. Think apple pay user experience. Unlike turnkey and other MPC or hosted wallet offerings, Portkey is totally decentralised, it's just you and your keys. The encrypted keys can be stored wherever you want. ie: Databases, locally, on-chain, ipfs, arweave and anywhere you can think of.
 
 - **No Secrets, No Custodians**  
   The wallet is completely self-custodial but your users dont need to know about keys or seed phrases if they dont want. The catch here with other passkey wallet providers is the privake keys are held by a secured server or decentralised network and access is reliant on that provider. This implementation has no 3rd party reliance at all with all the same benefits.
