@@ -1,15 +1,3 @@
-Portkey
-
-Install
-
-Build
-
-run vault
-
-run demo app
-
-
-
 ![Screenshot 2025-05-04 at 11 33 30 am](https://github.com/user-attachments/assets/25b95e92-1de3-40c1-b307-fb520b8a67e0)
 
 # 🔐 Portkey - decentralised passkey secured crypto wallet
