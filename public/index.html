@@ -787,6 +787,7 @@
                 console.log("createWalletAndPasskey()")
                 createWalletAndPasskey()
               }
+
               if (buttonType == "signEthTx") {
 
                 console.log("signEthTx()")
@@ -810,6 +811,30 @@
                 pendingEthereum = null;
 
               }
+
+              if (buttonType == "signSolTx") {
+
+                console.log("signSolTx()")
+                log("📝 Received Solana transaction to sign");
+                pendingSolana = { ...data.data, id };
+
+                console.log(data.data)
+
+                log("🔄 Processing Solana transaction...");
+                const result = await signSol(pendingSolana);
+                window.parent.postMessage(
+                  {
+                    id: pendingEthereum.id,
+                    command: "signSolanaTransaction",
+                    result,
+                    source: "iframe",
+                  },
+                  parent
+                );
+                log("✅ Solana transaction processed");
+                pendingSolana = null;
+
+                }
               
             };
             document.body.appendChild(btn);

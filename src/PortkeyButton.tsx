@@ -18,7 +18,6 @@ interface PortkeyButtonProps {
   className?: string;
   hide: any;
 }
-
 export const PortkeyButton: React.FC<PortkeyButtonProps> = ({
   label,
   command,
@@ -31,16 +30,17 @@ export const PortkeyButton: React.FC<PortkeyButtonProps> = ({
   hide
 }) => {
   const ref = useRef<HTMLDivElement>(null);
-  const { setMountTo, setIframeSrc, mountTo } = useBackgroundIframe();
+  const { iframeRef, setIframeSrc, moveIframeTo } = useBackgroundIframe();
 
-  const transaction = data?.transaction?.data || label
+  const transaction = data?.transaction?.data || label;
 
   const sendIframeMessages = () => {
-    const iframe = document.getElementById('portkey') as HTMLIFrameElement | null;
+    const iframe = iframeRef.current;
     if (!iframe?.contentWindow) return;
 
-    iframe.contentWindow.postMessage({ id, command: 'clearButton', source: 'parent' }, origin);
+    iframe.style.display = hide ? 'none' : 'block';
 
+    iframe.contentWindow.postMessage({ id, command: 'clearButton', source: 'parent' }, origin);
     iframe.contentWindow.postMessage(
       {
         id,
@@ -59,20 +59,18 @@ export const PortkeyButton: React.FC<PortkeyButtonProps> = ({
   };
 
   useEffect(() => {
-    console.log("hgello")
     if (ref.current) {
-      console.log("blah")
-      setMountTo(ref.current);
-      setIframeSrc(origin); // optional: only if needed
+      setIframeSrc(origin);
+      moveIframeTo(ref.current);
       sendIframeMessages();
     }
 
-
     return () => {
-      // Optional: remove mount if unmounted, or leave if persistent across routes
-      // setMountTo(null);
-    };
-    // TODO, make this change on any prop incoming changing, not just label and data..
+      const iframe = iframeRef.current;
+      if (iframe) {
+        iframe.style.display = 'none';
+      }
+    }
   }, [label, transaction]);
 
   useEffect(() => {
@@ -86,5 +84,5 @@ export const PortkeyButton: React.FC<PortkeyButtonProps> = ({
     return () => window.removeEventListener('message', handleReady);
   }, []);
 
-  return <div ref={ref} className={className} style={{width: 300, height: 47, display: hide ? 'none' : 'inline-block' }} />;
+  return <div ref={ref} className={className} style={{ width: 300, height: 47, visibility: hide ? 'hidden' : 'visible' }} />;
 };

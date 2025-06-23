@@ -4,33 +4,26 @@ import { createPortal } from 'react-dom';
 import { BackgroundIframeContext } from './BackgroundIframeContext';
 import { PortkeyButton } from './PortkeyButton';
 
+// BackgroundIframeProvider.tsx
 export const BackgroundIframeProvider = ({ children, initialSrc = 'about:blank' }) => {
   const [iframeSrc, setIframeSrc] = useState(initialSrc);
-  const [mountTo, setMountTo] = useState<HTMLElement | null>(null);
-  const parkingSlotRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  const iframeElement = useMemo(() => (
-    <iframe
-      id="portkey"
-      allow="publickey-credentials-create *; publickey-credentials-get *"
-      src={iframeSrc}
-      title="Portkey"
-      style={{
-        width: '300px',
-        height: '47px',
-        border: 'none',
-        zIndex: 1000,
-        backgroundColor: 'transparent',
-        pointerEvents: 'auto',
-        borderRadius: '12px',
-        overflow: 'hidden',
-        display: 'block',
-      }}
-    />
-  ), [iframeSrc]);
+  const moveIframeTo = (targetEl: HTMLElement | null) => {
+    const iframe = iframeRef.current;
+    if (!iframe || !targetEl) return;
 
-  console.log(mountTo, parkingSlotRef.current)
-  const renderTarget = mountTo || parkingSlotRef.current;
+    const rect = targetEl.getBoundingClientRect();
+    iframe.style.position = 'absolute';
+    iframe.style.top = `${window.scrollY + rect.top}px`;
+    iframe.style.left = `${window.scrollX + rect.left}px`;
+  };
+
+  const contextValue = useMemo(() => ({
+    setIframeSrc,
+    iframeRef,
+    moveIframeTo,
+  }), []);
 
   useEffect(() => {
     const testIframeSecurity = () => {
@@ -44,7 +37,7 @@ export const BackgroundIframeProvider = ({ children, initialSrc = 'about:blank' 
             '[SECURITY WARNING] You should NOT be able to access iframe document. Check your CSP or iframe origin!'
           );
         } catch (err) {
-          console.log('[✅] Portkey iframe is cross-origin isolated — content access is blocked as expected.');
+          console.log('[✅] Portkey is cross-origin isolated — Confirmed content access is blocked.');
         }
     };
 
@@ -58,14 +51,23 @@ export const BackgroundIframeProvider = ({ children, initialSrc = 'about:blank' 
   }, []);
 
   return (
-    <BackgroundIframeContext.Provider value={{ iframeSrc, setIframeSrc, mountTo, setMountTo, parkingSlotRef }}>
+    <BackgroundIframeContext.Provider value={contextValue}>
       {children}
-      <div ref={parkingSlotRef} style={{width: "300px", height: "47px", position: 'absolute', top: '0px', left: '0px',}}>
-        
-      </div>
-      {renderTarget && createPortal(iframeElement, renderTarget)}
-
-      
+      <iframe
+        id="portkey"
+        allow="publickey-credentials-create *; publickey-credentials-get *"
+        ref={iframeRef}
+        src={iframeSrc}
+        style={{
+          width: '300px',
+          height: '47px',
+          border: 'none',
+          zIndex: 1000,
+          backgroundColor: 'transparent',
+          display: 'none', // hidden by default
+          pointerEvents: 'auto',
+        }}
+      />
     </BackgroundIframeContext.Provider>
   );
 };

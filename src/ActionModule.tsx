@@ -87,6 +87,8 @@ export function signSolanaTransaction({
     return;
   }
 
+  console.log("sign solana tx")
+
   window.addEventListener("message", (event) => {
     if (event.origin !== vaultOrigin || event.data?.command !== "signSolanaTransaction") return;
 
