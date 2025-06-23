@@ -22,19 +22,257 @@ Think **Turnkey**, but without a third-party HSM: the private key _never leaves 
 | ⚡️ **Session re-use** | _Optional_ `allowSessionSigning` flag caches the derived AES key in a closure for ~5 min → multiple signatures without additional passkey prompts. |
 | 🕶 **Zero snooping** | Vault lives in a different origin + sandboxed + `document.domain` locked. You can’t read it—even in devtools. |
 
-...
+---
 
-> _“The best password is no password” → the best wallet is no seed phrase.  
-> Welcome to passkey-powered web3 with **Portkey**._
+## 🚀 Quick Start
+
+### 1. Install
+
+```bash
+npm i @your-scope/portkey            # or pnpm add / yarn add
+
+2. Wrap your app
+
+import React from "react";
+import { BackgroundIframeProvider } from "@your-scope/portkey";
+
+export default function App() {
+  return (
+    <BackgroundIframeProvider initialSrc="https://vault.yourapp.xyz">
+      <YourRoutesAndPages />
+    </BackgroundIframeProvider>
+  );
+}
+
+3. Create a wallet (signup)
+
+import { PortkeyButton } from "@your-scope/portkey";
+
+export function Signup() {
+  return (
+    <PortkeyButton
+      label="Create Wallet"
+      command="signup"
+      buttonType="signup"
+      origin="https://vault.yourapp.xyz"
+      className="my-4"
+    />
+  );
+}
+
+PortkeyButton automatically:
+
+Moves and shows the Vault iframe on top of itself.
+
+Sends the signup command.
+
+Waits for the Vault to return { wallet, passkey }.
+
+4. Listen for results
+
+import { usePortkeyWatcher } from "@your-scope/portkey";
+
+export function GlobalPortkeyEvents() {
+  usePortkeyWatcher((msg) => {
+    if (msg.command === "signup" && msg.result) {
+      console.log("✅ New wallet:", msg.result.wallet);
+      // ➡️ Persist `wallet.cipherText / iv / salt` server-side
+    }
+  }, "https://vault.yourapp.xyz");
+
+  return null; // invisible listener
+}
+
+5. Sign a transaction
+
+import {
+  signEthereumTransaction,
+  signSolanaTransaction,
+} from "@your-scope/portkey";
+
+export async function doSomethingCool({
+  iframe,         // from BackgroundIframeContext
+  vaultOrigin,    // https://vault.yourapp.xyz
+  vault,          // { cipherText, iv, salt } from step 3
+  pubkey,         // passkey credentialId
+}) {
+  signEthereumTransaction({
+    iframe,
+    vaultOrigin,
+    pubkey,
+    vault,
+    transactionBase64: btoa(
+      JSON.stringify({
+        to: "0x8ba1f109551bD432803012645Ac136ddd64DBA72",
+        value: "0x2386f26fc10000", // 0.01 ETH
+        maxFeePerGas: "0x28",
+        maxPriorityFeePerGas: "0x28",
+        nonce: 0,
+        chainId: 1,
+        type: 2,
+      })
+    ),
+    onSigned: (rawTx) => console.log("📜 signedTx:", rawTx),
+    onError: console.error,
+  });
+}
+
+🏗 Architecture
+
+sequenceDiagram
+    participant UI as React App
+    participant PK as Portkey React SDK
+    participant VAULT as Vault Iframe (cross-origin)
+    participant AUTH as Platform Authenticator (passkey)
+
+    UI->>PK: <PortkeyButton command="sign">
+    PK->>VAULT: postMessage({ command:"sign" })
+    VAULT--)UI: "ready" ✅
+    UI->>AUTH: navigator.credentials.get({ prf })
+    AUTH-->>VAULT: PRF( salt )  // shared secret
+    VAULT->>VAULT: AES-GCM decrypt private key
+    VAULT->>VAULT: Sign tx / typed data
+    VAULT->>PK: postMessage({ signedTx })
+    PK-->>UI: resolve onSigned callback
+Cross-origin isolation prevents the parent from touching VAULT.document.
+
+PRF extension = deterministic, credential-scoped HKDF; no user secrets cross domain.
+
+Optional session key (in-memory, AES-encrypted) reduces UX friction.
+
+🛠 API Reference
+<details> <summary><strong>&lt;BackgroundIframeProvider initialSrc?&gt;</strong></summary>
+Prop	Type	Default	Description
+initialSrc	string	"about:blank"	The Vault URL (https://vault.foo.xyz).
+children	ReactNode	—	Your app.
+
+BackgroundIframeProvider exposes a Context with:
 
 
+{
+  iframeRef: RefObject<HTMLIFrameElement>;
+  setIframeSrc(src: string): void;
+  moveIframeTo(el: HTMLElement | null): void;
+}
+</details> <details> <summary><strong>&lt;PortkeyButton />&nbsp;(UI helper)</strong></summary>
+Prop	Type	Required	Description
+label	string	✔︎	Button text.
+buttonType	"signup" | "signEthTx" | "signSolTx"	✔︎	What to do when clicked.
+command	string	✔︎	Mirrors Vault command (e.g. "signup").
+origin	string	✔︎	Vault origin (https://vault.foo.xyz).
+data	Record<string,any>	—	Extra payload (tx, etc.).
+hide	boolean	—	Invisible but keeps iframe alive (perf hack).
+
+</details> <details> <summary><strong>createWallet(options)</strong></summary>
+
+createWallet({
+  iframe,            // HTMLIFrameElement (Vault)
+  vaultOrigin,       // string
+  jwt,               // string (optional server auth)
+  pubkey,            // credentialId to bind this wallet to
+  onResult(wallet),  // callback
+  onError(error),    // callback
+});
+Creates both an Ethereum & Solana wallet, encrypted with the passkey PRF.
+
+</details> <details> <summary><strong>signEthereumTransaction(options)</strong></summary>
+Same signature as above, plus transactionBase64.
+Returns { signedTx }.
+
+</details> <details> <summary><strong>signSolanaTransaction(options)</strong></summary>
+Same signature as above, plus transactionBase64.
+Returns { signedTx } (Base64 of a VersionedTransaction).
+
+</details> <details> <summary><strong>usePortkeyWatcher(handler, allowedOrigin)</strong></summary>
+
+usePortkeyWatcher((msg) => {
+  // msg.command ∈ ["signup", "signedEthereumTransaction", ...]
+}, "https://vault.foo.xyz");
+Typed guard for window.postMessage events.
+
+</details>
+⚙️ Advanced
+Keep-alive session key
+
+// inside Vault query-string or postMessage `data`
+{ allowSessionSigning: true }  // default: false
+The Vault will:
+
+Derive AES key once (passkey UX prompt).
+
+Re-encrypt it with an in-memory master key.
+
+Cache it for 5 minutes of inactivity → multiple signatures, fewer prompts.
+
+Custom UI / no preset button
+Prefer your own styling?
 
 
+const { iframeRef, setIframeSrc, moveIframeTo } = useBackgroundIframe();
+
+function MyBeautifulCTA() {
+  const ref = React.useRef<HTMLButtonElement>(null);
+
+  const onClick = () => {
+    if (!ref.current) return;
+    setIframeSrc("https://vault.foo.xyz?chain=eth");
+    moveIframeTo(ref.current);
+    ref.current.style.opacity = "0.5";
+
+    iframeRef.current!.contentWindow!.postMessage(
+      { command: "signEthereumTransaction", data: myTx },
+      "https://vault.foo.xyz"
+    );
+  };
+
+  return <button ref={ref} onClick={onClick}>Pay 0.01 ETH</button>;
+}
 
 
+🛡 Security Model
+Origin Isolation: Vault is served from vault.yourapp.xyz, while your SPA is app.yourapp.xyz.
 
+Content-Security-Policy: Scripts are limited to altruistic CDNs; no inline eval.
 
+document.domain & window.top blocked: Even malicious extensions can’t peek.
 
+Passkey PRF: Key derivation is bound to the credential & RP ID, impossible to brute force without the user’s authenticator.
+
+No remote logging: All console.logs are inside the iframe context only.
+
+See /vault/index.html for CSP, COOP/COEP and inline nonce.
+
+🏗 Deploying the Vault
+cd packages/vault
+pnpm build                 # produces dist/
+rsync -a dist/ user@server:/var/www/vault
+DNS → vault.yourapp.xyz, HTTPS required.
+Add the following headers (Apache / Nginx / cloud):
+
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Embedder-Policy: require-corp
+Content-Security-Policy: default-src 'self'; ...
+🧑‍💻 Contributing
+pnpm i
+
+pnpm dev – runs Storybook for the React SDK & a local Vault (localhost:5173).
+
+Commit using Conventional Commits & open a PR.
+
+Please check /CONTRIBUTING.md for lint/test guidelines.
+
+📄 License
+MIT © Your Company Name – Use at your own risk. Experimental software; audit pending.
+
+❤️ Acknowledgements
+webauthn-json for sane WebAuthn serialization.
+
+ethers.js & @solana/web3.js for battle-tested crypto.
+
+Inspiration from Turnkey’s UX & security papers.
+
+“The best password is no password” → the best wallet is no seed phrase.
+Welcome to passkey-powered web3 with Portkey.
 
 
 
