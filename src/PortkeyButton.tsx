@@ -31,7 +31,9 @@ export const PortkeyButton: React.FC<PortkeyButtonProps> = ({
   hide
 }) => {
   const ref = useRef<HTMLDivElement>(null);
-  const { setMountTo, setIframeSrc } = useBackgroundIframe();
+  const { setMountTo, setIframeSrc, mountTo } = useBackgroundIframe();
+
+  const transaction = data?.transaction?.data || label
 
   const sendIframeMessages = () => {
     const iframe = document.getElementById('portkey') as HTMLIFrameElement | null;
@@ -57,17 +59,21 @@ export const PortkeyButton: React.FC<PortkeyButtonProps> = ({
   };
 
   useEffect(() => {
+    console.log("hgello")
     if (ref.current) {
+      console.log("blah")
       setMountTo(ref.current);
       setIframeSrc(origin); // optional: only if needed
       sendIframeMessages();
     }
 
+
     return () => {
       // Optional: remove mount if unmounted, or leave if persistent across routes
-      setMountTo(null);
+      // setMountTo(null);
     };
-  }, [label]);
+    // TODO, make this change on any prop incoming changing, not just label and data..
+  }, [label, transaction]);
 
   useEffect(() => {
     const handleReady = (event: MessageEvent) => {

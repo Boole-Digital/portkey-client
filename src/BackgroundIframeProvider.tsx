@@ -2,6 +2,7 @@
 import React, { useRef, useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { BackgroundIframeContext } from './BackgroundIframeContext';
+import { PortkeyButton } from './PortkeyButton';
 
 export const BackgroundIframeProvider = ({ children, initialSrc = 'about:blank' }) => {
   const [iframeSrc, setIframeSrc] = useState(initialSrc);
@@ -28,6 +29,7 @@ export const BackgroundIframeProvider = ({ children, initialSrc = 'about:blank' 
     />
   ), [iframeSrc]);
 
+  console.log(mountTo, parkingSlotRef.current)
   const renderTarget = mountTo || parkingSlotRef.current;
 
   useEffect(() => {
@@ -58,8 +60,12 @@ export const BackgroundIframeProvider = ({ children, initialSrc = 'about:blank' 
   return (
     <BackgroundIframeContext.Provider value={{ iframeSrc, setIframeSrc, mountTo, setMountTo, parkingSlotRef }}>
       {children}
-      <div ref={parkingSlotRef} style={{ position: 'absolute', top: '-9999px', left: '-9999px', width: 0, height: 0 }} />
+      <div ref={parkingSlotRef} style={{width: "300px", height: "47px", position: 'absolute', top: '0px', left: '0px',}}>
+        
+      </div>
       {renderTarget && createPortal(iframeElement, renderTarget)}
+
+      
     </BackgroundIframeContext.Provider>
   );
 };
