@@ -313,18 +313,6 @@ Cross-Origin-Opener-Policy: same-origin
 Cross-Origin-Embedder-Policy: require-corp
 Content-Security-Policy: default-src 'self';
 ```
-
----
-
-## 🧑‍💻 Contributing
-
-```bash
-pnpm i
-pnpm dev  # runs Storybook + local Vault server
-```
-
-Use Conventional Commits. See `/CONTRIBUTING.md`.
-
 ---
 
 ## 📄 License
