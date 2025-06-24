@@ -29,7 +29,7 @@
         "provider",
         "context"
     ],
-    "author": "Your Name",
+    "author": "Lachlan G",
     "license": "MIT",
     "peerDependencies": {
         "react": "^18.0.0",
