@@ -128,39 +128,38 @@ export function GlobalPortkeyEvents() {
 
 ### 5. Sign a transaction
 
-```tsx
-import {
-  signEthereumTransaction,
-  signSolanaTransaction,
-} from "portkey-client";
+5. Sign a transaction (with <PortkeyButton />)
 
-export async function doSomethingCool({
-  iframe,         // from BackgroundIframeContext
-  vaultOrigin,    // https://vault.yourapp.xyz
-  vault,          // { cipherText, iv, salt } from step 3
-  pubkey,         // passkey credentialId
-}) {
-  signEthereumTransaction({
-    iframe,
-    vaultOrigin,
-    pubkey,
-    vault,
-    transaction: btoa(
-      JSON.stringify({
-        to: "0x11a1f109551bD432803012645Ac136ddd64DBA72",
-        value: "0x2386f26fc10000", // 0.01 ETH
-        maxFeePerGas: "0x28",
-        maxPriorityFeePerGas: "0x28",
-        nonce: 0,
-        chainId: 1,
-        type: 2,
-      })
-    ),
-    onSigned: (rawTx) => console.log("📜 signedTx:", rawTx),
-    onError: console.error,
-  });
+```tsx
+import { PortkeyButton } from "portkey-client";
+
+export function SignTxButton({ tx, pubkey, vault }) {
+  return (
+    <PortkeyButton
+      label="Sign Transaction"
+      command="sign"
+      buttonType="sign"
+      origin="https://vault.yourapp.xyz"
+      data={{
+        transaction: {
+          pubkey,
+          vault,
+          data: tx,
+        },
+      }}
+      className="my-4"
+    />
+  );
 }
 ```
+
+This will:
+
+Render a button that activates the Vault iframe.
+
+Send the sign command along with the transaction data.
+
+Wait for the Vault to return a signed transaction.
 
 ---
 
