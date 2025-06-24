@@ -5,6 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "setup": "npm i ../../",
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview"

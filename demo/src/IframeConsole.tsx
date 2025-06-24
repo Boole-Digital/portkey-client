@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { usePortkeyWatcher } from 'react-background-iframe';
+import { usePortkeyWatcher } from 'portkey-client';
 
 const allowedOrigin = 'http://localhost:3002';
 

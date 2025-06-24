@@ -4,14 +4,17 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "setup": "npm i ../",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
+    "@portkey/web3.js": "file:..",
+    "portkey-client": "^1.0.2",
+    "react": "^18.1.0",
+    "react-dom": "^18.1.0",
     "tweetnacl": "^1.0.3"
   },
   "devDependencies": {
