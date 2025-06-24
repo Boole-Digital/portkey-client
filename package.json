@@ -23,11 +23,12 @@
         "url": "https://github.com/Boole-Digital/portkey"
     },
     "keywords": [
-        "react",
-        "iframe",
-        "background",
-        "provider",
-        "context"
+        "PRF",
+        "passkey",
+        "web3",
+        "wallet",
+        "EVM",
+        "Solana"
     ],
     "author": "Lachlan G",
     "license": "MIT",
