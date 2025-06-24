@@ -46,7 +46,7 @@ npm i portkey-client        # or pnpm add / yarn add
 
 ```tsx
 import React from "react";
-import { BackgroundIframeProvider } from "@your-scope/portkey";
+import { BackgroundIframeProvider } from "portkey-client";
 
 export default function App() {
   return (
@@ -60,7 +60,7 @@ export default function App() {
 ### 3. Create a wallet (signup)
 
 ```tsx
-import { PortkeyButton } from "@your-scope/portkey";
+import { PortkeyButton } from "portkey-client";
 
 export function Signup() {
   return (
@@ -86,7 +86,7 @@ Waits for the Vault to return { wallet, passkey }.
 ### 4. Listen for results
 
 ```tsx
-import { usePortkeyWatcher } from "@your-scope/portkey";
+import { usePortkeyWatcher } from "portkey-client";
 
 export function GlobalPortkeyEvents() {
   usePortkeyWatcher((msg) => {
@@ -106,7 +106,7 @@ export function GlobalPortkeyEvents() {
 import {
   signEthereumTransaction,
   signSolanaTransaction,
-} from "@your-scope/portkey";
+} from "portkey-client";
 
 export async function doSomethingCool({
   iframe,         // from BackgroundIframeContext
