@@ -39,7 +39,7 @@ Think **Turnkey**, but without a third-party HSM: the private key _never leaves 
 ### 1. Install
 
 ```bash
-npm i MODULE_COMING_SOON_***        # or pnpm add / yarn add
+npm i portkey-client        # or pnpm add / yarn add
 ```
 
 ### 2. Wrap your app
