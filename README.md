@@ -24,6 +24,32 @@ Think **Turnkey**, but without a third-party HSM: the private key _never leaves 
 
 ---
 
+## 🏗 Architecture
+
+```mermaid
+sequenceDiagram
+    participant UI as React App
+    participant PK as Portkey React SDK
+    participant VAULT as Vault Iframe (cross-origin)
+    participant AUTH as Platform Authenticator (passkey)
+
+    UI->>PK: <PortkeyButton command="sign">
+    PK->>VAULT: postMessage({ command: "sign" })
+    VAULT--)UI: "ready" ✅
+    UI->>AUTH: navigator.credentials.get({ prf })
+    AUTH-->>VAULT: PRF(salt) // shared secret
+    VAULT->>VAULT: AES-GCM decrypt private key
+    VAULT->>VAULT: Sign tx / typed data
+    VAULT->>PK: postMessage({ signedTx })
+    PK-->>UI: resolve onSigned callback
+```
+
+Cross-origin isolation prevents the parent from touching `VAULT.document`.
+
+PRF extension = deterministic, credential-scoped HKDF; no user secrets cross domain.
+
+Optional session key (in-memory, AES-encrypted) reduces UX friction.
+
 ## ❤️ Acknowledgements
 
 - `ethers.js` & `@solana/web3.js` for crypto
@@ -135,32 +161,6 @@ export async function doSomethingCool({
   });
 }
 ```
-
-## 🏗 Architecture
-
-```mermaid
-sequenceDiagram
-    participant UI as React App
-    participant PK as Portkey React SDK
-    participant VAULT as Vault Iframe (cross-origin)
-    participant AUTH as Platform Authenticator (passkey)
-
-    UI->>PK: <PortkeyButton command="sign">
-    PK->>VAULT: postMessage({ command: "sign" })
-    VAULT--)UI: "ready" ✅
-    UI->>AUTH: navigator.credentials.get({ prf })
-    AUTH-->>VAULT: PRF(salt) // shared secret
-    VAULT->>VAULT: AES-GCM decrypt private key
-    VAULT->>VAULT: Sign tx / typed data
-    VAULT->>PK: postMessage({ signedTx })
-    PK-->>UI: resolve onSigned callback
-```
-
-Cross-origin isolation prevents the parent from touching `VAULT.document`.
-
-PRF extension = deterministic, credential-scoped HKDF; no user secrets cross domain.
-
-Optional session key (in-memory, AES-encrypted) reduces UX friction.
 
 ---
 
