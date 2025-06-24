@@ -120,7 +120,7 @@ export async function doSomethingCool({
     vaultOrigin,
     pubkey,
     vault,
-    transactionBase64: btoa(
+    transaction: btoa(
       JSON.stringify({
         to: "0x11a1f109551bD432803012645Ac136ddd64DBA72",
         value: "0x2386f26fc10000", // 0.01 ETH
