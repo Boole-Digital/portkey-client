@@ -317,7 +317,7 @@ Content-Security-Policy: default-src 'self';
 
 ## 📄 License
 
-MIT © Your Company Name – Use at your own risk. Experimental software; audit pending.
+MIT © Boole Digital – Use at your own risk. Experimental software; audit pending.
 
 ---
 
