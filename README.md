@@ -134,6 +134,7 @@ export async function doSomethingCool({
     onError: console.error,
   });
 }
+```
 
 ## 🏗 Architecture
 
