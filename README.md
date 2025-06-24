@@ -5,7 +5,7 @@ _Create passkey-secured, self-custodial crypto wallets & sign transactions strai
 [![bundle size](https://img.shields.io/bundlephobia/minzip/portkey-client)](https://bundlephobia.com/result?p=portkey-client)
 [![license](https://img.shields.io/npm/l/portkey-client)](./LICENSE)
 
-Portkey brings the power of **FIDO2 / WebAuthn passkeys** to web3.  
+Portkey brings the power of **FIDO2 / WebAuthn passkeys** to web3. Portkey uses Passkeys PRF extension to encrypt and decrypt keys for signing.
 Think **Turnkey**, but without a third-party HSM: the private key _never leaves the user’s device_ and is never decryptable by your app, browser extensions, or Portkey itself.
 
 ---
