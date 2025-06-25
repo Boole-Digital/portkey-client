@@ -6,22 +6,22 @@
     <meta
       http-equiv="Content-Security-Policy"
       content="
-    default-src 'self';
-    script-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net 'nonce-abc123';
-    style-src 'self' 'unsafe-inline';
-    connect-src 'self' https://api.hyperliquid.xyz;"
+        default-src 'self';
+        script-src 'self' 'nonce-abc123'; 
+        style-src 'self' 'unsafe-inline';
+        connect-src 'self' https://api.hyperliquid.xyz;;
+    "
     />
     <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"
-      nonce="abc123"
+      src="/ethers.js"
     ></script>
     <script
-      src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.73.3/lib/index.iife.min.js"
-      nonce="abc123"
+      src="/solana.js"
     ></script>
     <script
-      src="../bundle.js"
+      src="/bundle.js"
       nonce="abc123"
+    ></script>
     ></script>
     <style>
       html, body {

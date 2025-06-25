@@ -39,6 +39,11 @@ export const BackgroundIframeProvider: React.FC<BackgroundIframeProviderProps> =
   );
 
   useEffect(() => {
+
+    // TODO
+    // 1. SRI for external scripts in iframe, and
+    // 2. curl-like server-side fetching and hashing of the full HTML
+
     const testIframeSecurity = () => {
       const iframe = document.getElementById('portkey') as HTMLIFrameElement | null;
       if (!iframe || !iframe.contentWindow) return;
