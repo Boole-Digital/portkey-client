@@ -1,5 +1,6 @@
 import React, { useRef, useState, useMemo, useEffect } from 'react';
 import { BackgroundIframeContext } from './BackgroundIframeContext';
+import { verifyIframeHash } from './IntegrityCheck';
 
 interface BackgroundIframeProviderProps {
   children: React.ReactNode;
@@ -14,6 +15,10 @@ export const BackgroundIframeProvider: React.FC<BackgroundIframeProviderProps> =
   const [mountTo, setMountTo] = useState<HTMLElement | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const parkingSlotRef = useRef<HTMLDivElement>(null);
+
+  // Set these values in production
+  const iframeURL = 'http://localhost:3002';
+  const expectedHash = 'abc123...your hash here...';
 
   const moveIframeTo = (targetEl: HTMLElement | null) => {
     const iframe = iframeRef.current;
@@ -44,7 +49,7 @@ export const BackgroundIframeProvider: React.FC<BackgroundIframeProviderProps> =
     // 1. SRI for external scripts in iframe, and
     // 2. curl-like server-side fetching and hashing of the full HTML
 
-    const testIframeSecurity = () => {
+    const testIframeSecurity = async () => {
       const iframe = document.getElementById('portkey') as HTMLIFrameElement | null;
       if (!iframe || !iframe.contentWindow) return;
 
@@ -56,6 +61,19 @@ export const BackgroundIframeProvider: React.FC<BackgroundIframeProviderProps> =
       } catch (err) {
         console.log('[✅] Portkey is cross-origin isolated — Confirmed content access is blocked.');
       }
+
+      // Check raw HTML integrity
+
+      // Setup in production
+      // verifyIframeHash({
+      //   url: iframeURL,
+      //   expectedHash,
+      //   onFailure: (actualHash: string) => {
+      //     // Optional: custom fail handler
+      //     console.error("Iframe verification failed. Hash was:", actualHash);
+      //     document.body.innerHTML = "<h1>Blocked: Invalid Iframe</h1>";
+      //   }
+      // });
     };
 
     const handleReady = (event: MessageEvent) => {

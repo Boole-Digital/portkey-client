@@ -12,17 +12,26 @@
         connect-src 'self' https://api.hyperliquid.xyz;;
     "
     />
+
     <script
       src="/ethers.js"
+      integrity="sha384-u0NcfwGT0MUYq60cVWPN34m99JhiJTCRG+0JOgmAQ++pTQ4w6AKkwhA9Wj/VjNRi"
+      crossorigin="anonymous"
     ></script>
+
     <script
       src="/solana.js"
+      integrity="sha384-gkL64Dep4/aFve2SE+PI4j5r+FAL2wMqEjXm8iZX1KkSfvybOy+iAdLKq1az9TSA"
+      crossorigin="anonymous"
     ></script>
+
     <script
       src="/bundle.js"
+      integrity="sha384-pHp/a//YkyrYrEmaqoIZzlLjDmfkN69N/fe+nKuzYEmHTDup/ydz0AthW1t8yRbu"
       nonce="abc123"
+      crossorigin="anonymous"
     ></script>
-    ></script>
+
     <style>
       html, body {
         margin: 0;
@@ -288,7 +297,7 @@
 
         window.parent.postMessage(
           { status: "ready", source: "iframe" },
-          "http://localhost:5173/"
+          "*"
         );
         log("📡 Sent 'ready' to parent");
 
